@@ -4,7 +4,9 @@ Twitch chat bot that among other things manages predictions via chat commands.
 
 ## Prerequisites
 
-- [Python](https://www.python.org/downloads/) (Add to PATH)
+- [Python](https://www.python.org/downloads/) (Add to PATH during installation)
+- A Twitch account (with 2FA enabled)
+- A Twitch bot account (you CAN use your streaming account)
 
 ## Installation
 
