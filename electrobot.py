@@ -43,7 +43,7 @@ def refresh_token(refr_token, br=''):
             exit()
 
 
-def validate_token(br='', q=None): #which one
+def validate_token(br, q=None): #which one
     global token_bot
     global token_broad
     
@@ -57,7 +57,7 @@ def validate_token(br='', q=None): #which one
             print("[+] Run authorize.py")
             os.remove(f'tokens/token_{br}.json')
             exit() #parent will die on hourly check, if not by user
-        except FileNotFoundError: #shouldnt happen with broad token
+        except FileNotFoundError:
             print("[+] No tokens, run authorize.py")
             exit()
     
