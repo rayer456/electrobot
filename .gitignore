@@ -1,0 +1,5 @@
+__pycache__
+.vscode
+config/config.toml
+tokens/*.json
+test.py

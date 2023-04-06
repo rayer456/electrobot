@@ -1,0 +1,22 @@
+[socket]
+HOST = "127.0.0.1" #localhost
+PORT = 8777
+
+[auth] #found when creating application dev.twitch.tv/console
+CLIENT_ID = ""
+CLIENT_SECRET = ""
+REDIRECT_URI = "" #must match HOST/PORT in [socket]
+CHANNEL_ID = ""
+
+[scopes]
+BOT_SCOPE = "chat%3Aread+chat%3Aedit"
+BROAD_SCOPE = "channel%3Amanage%3Apredictions+moderation%3Aread"
+
+[irc]
+HOST = "irc.chat.twitch.tv"
+PORT = 6697
+CHANNEL = "" #your channel, MUST BE LOWERCASE
+BOT_ACCOUNT = "" #twitch account for bot
+
+[eventsub]
+HOST = "wss://eventsub-beta.wss.twitch.tv/ws"

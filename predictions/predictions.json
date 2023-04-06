@@ -1,0 +1,193 @@
+{
+    "list": ["bike", "5530", "gauntlet", "tow", "rich_switch", "meat_switch", "cleaning", "train", "yomp", "pb", "wr"],
+    "predictions": [
+        {
+            "name": "bike",
+            "data": {
+                "broadcaster_id": "xdd",
+                "title": "Parked bike?",
+                "outcomes": [
+                    {
+                        "title": "yes"
+                    },
+                    {
+                        "title": "no"
+                    }
+                ],
+                "prediction_window": 600
+            }
+        },
+        {
+            "name": "5530",
+            "data": {
+                "broadcaster_id": "xdd",
+                "title": "Sub 55:30 trevis?",
+                "outcomes": [
+                    {
+                        "title": "yes"
+                    },
+                    {
+                        "title": "no"
+                    }
+                ],
+                "prediction_window": 600
+            }
+        },
+        {
+            "name": "gauntlet",
+            "data": {
+                "broadcaster_id": "xdd",
+                "title": "Free gauntlet?",
+                "outcomes": [
+                    {
+                        "title": "yes"
+                    },
+                    {
+                        "title": "no"
+                    }
+                ],
+                "prediction_window": 600
+            }
+        },
+        {
+            "name": "tow",
+            "data": {
+                "broadcaster_id": "xdd",
+                "title": "Free tow truck?",
+                "outcomes": [
+                    {
+                        "title": "yes"
+                    },
+                    {
+                        "title": "no"
+                    }
+                ],
+                "prediction_window": 600
+            }
+        },
+        {
+            "name": "rich_switch",
+            "data": {
+                "broadcaster_id": "xdd",
+                "title": "What switch on Mr. Richards?",
+                "outcomes": [
+                    {
+                        "title": "Upstairs"
+                    },
+                    {
+                        "title": "Downstairs"
+                    },
+                    {
+                        "title": "Other"
+                    }
+                ],
+                "prediction_window": 600
+            }
+        },
+        {
+            "name": "meat_switch",
+            "data": {
+                "broadcaster_id": "xdd",
+                "title": "What switch on Fresh Meat?",
+                "outcomes": [
+                    {
+                        "title": "God switch"
+                    },
+                    {
+                        "title": "Store switch"
+                    },
+                    {
+                        "title": "Lamar switch"
+                    },
+                    {
+                        "title": "Other"
+                    }
+                ],
+                "prediction_window": 600
+            }
+        },
+        {
+            "name": "cleaning",
+            "data": {
+                "broadcaster_id": "xdd",
+                "title": "Which car on cleaning?",
+                "outcomes": [
+                    {
+                        "title": "4th"
+                    },
+                    {
+                        "title": "5th"
+                    }
+                ],
+                "prediction_window": 600
+            }
+        },
+        {
+            "name": "train",
+            "data": {
+                "broadcaster_id": "xdd",
+                "title": "Blocked by train?",
+                "outcomes": [
+                    {
+                        "title": "yes"
+                    },
+                    {
+                        "title": "no"
+                    }
+                ],
+                "prediction_window": 600
+            }
+        },
+        {
+            "name": "yomp",
+            "data": {
+                "broadcaster_id": "xdd",
+                "title": "Successful yomp?",
+                "outcomes": [
+                    {
+                        "title": "yes"
+                    },
+                    {
+                        "title": "no"
+                    }
+                ],
+                "prediction_window": 600
+            }
+        },
+        {
+            "name": "wr",
+            "data": {
+                "broadcaster_id": "xdd",
+                "title": "World record?",
+                "outcomes": [
+                    {
+                        "title": "yes"
+                    },
+                    {
+                        "title": "no"
+                    },
+                    {
+                        "title": "tie"
+                    }
+                ],
+                "prediction_window": 600
+            }
+        },
+        {
+            "name": "pb",
+            "data": {
+                "broadcaster_id": "xdd",
+                "title": "PB?",
+                "outcomes": [
+                    {
+                        "title": "yes"
+                    },
+                    {
+                        "title": "no"
+                    }
+                ],
+                "prediction_window": 600
+            }
+        }
+    ]
+}
