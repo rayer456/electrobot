@@ -202,7 +202,7 @@ def event_prediction_end(outcomes, e_status, winning_id):
             send_data(f"PRIVMSG {CHANNEL} :{loser_string}")
         
     else: #canceled
-        send_data(f"PRIVMSG {CHANNEL} :Prediction canceled SadBalls")
+        send_data(f"PRIVMSG {CHANNEL} :Prediction canceled SadBalls") #balls
 
 
 def read_data(q): #TODO better name
