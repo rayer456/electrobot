@@ -1,5 +1,8 @@
 __pycache__
 .vscode
 config/config.toml
-tokens/*.json
+tokens/*
 test.py
+
+# keep tokens folder
+!tokens/.gitkeep 
