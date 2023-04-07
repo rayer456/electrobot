@@ -20,7 +20,7 @@ pip install -r requirements.txt
 
 ## Configuration
 
-Since electrobot is run locally you must [register your own app](https://dev.twitch.tv/docs/authentication/register-app/) with Twitch. This only takes a few minutes.
+Since electrobot runs locally you must [register your own app](https://dev.twitch.tv/docs/authentication/register-app/) with Twitch. This only takes a few minutes.
 Follow their instructions and you should end up with an application in [your console](https://dev.twitch.tv/console/apps).
 
 Once you see your application click on manage.
