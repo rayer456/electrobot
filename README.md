@@ -28,7 +28,7 @@ Once you see your application click on manage.
 - Set **OAuth Redirect URLs** to `http://localhost:8777`.
  The port doesn't really matter as long as it's not used elsewhere.
 - In **Category** choose Chat Bot.
-- Click I'm not a robot.
+- Click I'm not a robot, then Save
 - Take note of the **Client ID**, we will need this shortly.
 - Click on New Secret and also note that down.
 - Save
