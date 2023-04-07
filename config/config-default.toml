@@ -2,6 +2,10 @@
 HOST = "127.0.0.1" #localhost
 PORT = 8777
 
+[livesplit] #livesplit.server
+HOST = "127.0.0.1"
+PORT = 16834
+
 [auth] #found when creating application dev.twitch.tv/console
 CLIENT_ID = ""
 CLIENT_SECRET = ""

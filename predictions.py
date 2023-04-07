@@ -1,49 +1,41 @@
 import socket
 from time import sleep
-import datetime
+from datetime import timedelta
 import json
 
 
-HOST = "127.0.0.1"
-PORT = 16834
-
-
-def main(q):
+def main(q, CFG):
     global auto_predictions
 
-    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
-        sock.connect((HOST, PORT))
-        sock.settimeout(2.0)
+    try:
+        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
+            sock.connect((CFG['livesplit']['HOST'], CFG['livesplit']['PORT']))
+            sock.settimeout(2.0)
+            print("[+] Connected to Livesplit Server\n")
 
-        while True:
-            try:
-                sleep(5)
+            while True:
+                try:
+                    sleep(5)
+                    sock.send(b"getcurrentsplitname\r\n")
+                    split_name = sock.recv(1024).decode().rstrip() #remove \r\n
+                    
+                    #sock.send(b"getcurrenttime\r\n")
+                    #raw_time = sock.recv(1024).decode().rstrip()[:-3] #no ms
+                    #current_time = convert_to_hms(raw_time)
+                    #print(f"{split_name} : {current_time}")
+                    
+                    for pred in auto_predictions:
+                        if pred['split_name'].lower() == split_name.lower():
+                            q.put(pred['name']) #send to other process
+                            auto_predictions.remove(pred)
+                            
+                    #do things based on name and/or time
 
-                sock.send(b"getcurrentsplitname\r\n")
-                split_name = sock.recv(1024).decode().rstrip() #remove \r\n
-                
-                sock.send(b"getcurrenttime\r\n")
-                raw_time = sock.recv(1024).decode().rstrip()[:-3] #no ms
-
-                current_time = convert_to_hms(raw_time)
-
-                print(f"{split_name} : {current_time}")
-                
-                for pred in auto_predictions:
-                    if pred['split_name'].lower() == split_name.lower():
-                        q.put(f"start {pred['name']}")
-                        print(f"Start the {pred['name']} prediction!!")
-                        auto_predictions.remove(pred)
-
-
-                if split_name == 'DLG' and current_time <= '0:39:10': #pace
-                    #start prediction
-                    print("PB??")
-            except TimeoutError: #reset, add new predictions again
-                get_self_starting_predictions()
-                continue
-            except KeyboardInterrupt:
-                break
+                except TimeoutError: #user reset, add new predictions again
+                    get_self_starting_predictions()
+                    continue
+    except ConnectionRefusedError:
+        print('[!!!!] Start Livesplit Server')
 
 
 def get_self_starting_predictions():
@@ -62,8 +54,8 @@ def get_self_starting_predictions():
             auto_predictions.append(auto_pred)
 
 
-def convert_to_hms(current_time):
-    hms_list = current_time.split(':') #[1,22,33] or [4,16]
+def convert_to_hms(raw_time):
+    hms_list = raw_time.split(':') #[1,22,33] or [18,16]
     hours_in_seconds = 0
     minutes_in_seconds = int(hms_list[-2]) * 60
     seconds = int(hms_list[-1])
@@ -73,4 +65,4 @@ def convert_to_hms(current_time):
 
     total_seconds = hours_in_seconds + minutes_in_seconds + seconds
 
-    return str(datetime.timedelta(seconds=total_seconds))
+    return str(timedelta(seconds=total_seconds))

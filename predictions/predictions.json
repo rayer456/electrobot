@@ -1,5 +1,4 @@
 {
-    "list": ["bike", "5530", "gauntlet", "tow", "rich_switch", "meat_switch", "cleaning", "train", "yomp", "pb", "wr"],
     "predictions": [
         {
             "name": "bike",
@@ -8,7 +7,7 @@
                 "split_name": "complications"
             },
             "data": {
-                "broadcaster_id": "xdd",
+                "broadcaster_id": "",
                 "title": "Parked bike?",
                 "outcomes": [
                     {
@@ -28,7 +27,7 @@
                 "split_name": ""
             },
             "data": {
-                "broadcaster_id": "xdd",
+                "broadcaster_id": "",
                 "title": "Sub 55:30 trevis?",
                 "outcomes": [
                     {
@@ -48,7 +47,7 @@
                 "split_name": "Three's"
             },
             "data": {
-                "broadcaster_id": "xdd",
+                "broadcaster_id": "",
                 "title": "Free gauntlet?",
                 "outcomes": [
                     {
@@ -68,7 +67,7 @@
                 "split_name": "Minisub"
             },
             "data": {
-                "broadcaster_id": "xdd",
+                "broadcaster_id": "",
                 "title": "Free tow truck?",
                 "outcomes": [
                     {
@@ -88,7 +87,7 @@
                 "split_name": "IFTL"
             },
             "data": {
-                "broadcaster_id": "xdd",
+                "broadcaster_id": "",
                 "title": "What switch on Mr. Richards?",
                 "outcomes": [
                     {
@@ -111,7 +110,7 @@
                 "split_name": "Pack Man"
             },
             "data": {
-                "broadcaster_id": "xdd",
+                "broadcaster_id": "",
                 "title": "What switch on Fresh Meat?",
                 "outcomes": [
                     {
@@ -137,7 +136,7 @@
                 "split_name": "Cleaning"
             },
             "data": {
-                "broadcaster_id": "xdd",
+                "broadcaster_id": "",
                 "title": "Which car on cleaning?",
                 "outcomes": [
                     {
@@ -157,7 +156,7 @@
                 "split_name": "Legal Trouble"
             },
             "data": {
-                "broadcaster_id": "xdd",
+                "broadcaster_id": "",
                 "title": "Blocked by train?",
                 "outcomes": [
                     {
@@ -177,7 +176,7 @@
                 "split_name": "Big Score"
             },
             "data": {
-                "broadcaster_id": "xdd",
+                "broadcaster_id": "",
                 "title": "Successful yomp?",
                 "outcomes": [
                     {
@@ -197,7 +196,7 @@
                 "split_name": ""
             },
             "data": {
-                "broadcaster_id": "xdd",
+                "broadcaster_id": "",
                 "title": "World record?",
                 "outcomes": [
                     {
@@ -220,7 +219,7 @@
                 "split_name": ""
             },
             "data": {
-                "broadcaster_id": "xdd",
+                "broadcaster_id": "",
                 "title": "PB?",
                 "outcomes": [
                     {

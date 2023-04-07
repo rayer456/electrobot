@@ -17,9 +17,9 @@ CHANNEL = CFG['irc']['CHANNEL']
 
 
 def get_code(type_token):
-    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
-        s.bind((HOST, PORT))
-        s.listen()
+    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
+        sock.bind((HOST, PORT))
+        sock.listen()
         print(f"\n[+] Listening on {HOST} on port {PORT}")
 
         if type_token == 'bot':
@@ -28,7 +28,7 @@ def get_code(type_token):
             authorize(BROAD_SCOPE)
         print("\n[+] Browser opened, displaying authorization page")
 
-        conn, addr = s.accept() #blocking socket
+        conn, addr = sock.accept() #blocking socket
         with conn:
             while True:
                 data = conn.recv(1024).decode('utf-8') #waiting
@@ -57,15 +57,12 @@ def get_code(type_token):
                     
                 print("[+] Authorized")
                 print("[+] Code received, requesting token...")
-
                 get_token(secret, type_token)
                 break
 
 
 def authorize(scope):
-    #remove force_verify at some point
     link = f'https://id.twitch.tv/oauth2/authorize?response_type=code&client_id={CLIENT_ID}&redirect_uri={REDIRECT_URI}&scope={scope}&force_verify=true'
-    
     webbrowser.open(link)
 
 
@@ -111,8 +108,10 @@ def set_channel_id(token_broad):
         tomli_w.dump(CFG ,file)
 
 
-print('[+] This script will open your default browser to authorize a bot or streamer Twitch account')
-print('[+] Run this script twice to authorize both a bot/streamer account, both are necessary\n')
+print('[+] This script will open your default browser to authorize a bot or streamer Twitch account.')
+print('[+] Run this script twice to authorize both a bot/streamer account, both are necessary.\n')
+
+print('[+] Make sure you are logged in on the correct account each time\n')
 
 print("[+] Type 'bot' to authorize your bot account")
 print("[+] This account will be used to type in chat\n")

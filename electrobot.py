@@ -74,7 +74,7 @@ def validate_token(br, q=None): #which one
                 if q != None: 
                     q.put(token_broad)
 
-            print("\n[+] TOKEN VALIDATED")
+            print(f"\n[+] TOKEN VALIDATED | time left: {token['expires_in']}s")
         case 401: #unauth, expired
             print("[+] Token expired, refreshing...")
             refresh_token(token['refresh_token'], br) #refreshing json
@@ -88,7 +88,6 @@ def validate_token(br, q=None): #which one
                 token_broad = token['access_token']
                 if q != None: 
                     q.put(token_broad)
-
         case _:
             print(f"[+] Unknown error /validate: code {response.status_code}")
             exit()
@@ -108,7 +107,7 @@ def IRC_connect():
     send_data(f"NICK {ACCOUNT}")
     send_data(f"JOIN {CHANNEL}")
 
-    print(f"\n[+] Connected using {IRC.version()}\n")
+    print("\n[+] Connected to IRC Chat\n")
 
 
 def IRC_reconnect():
@@ -140,12 +139,12 @@ def get_mods():
         "Client-Id": f"{CLIENT_ID}"
     }
     response = requests.get(f'https://api.twitch.tv/helix/moderation/moderators?broadcaster_id={B_ID}', headers=headers)
-
+    
     mods = []
     for mod in json.loads(response.text)['data']:
         mods.append(mod['user_login'])
-
     mods.append(CFG['irc']['CHANNEL'])
+
     return mods
 
     
@@ -157,7 +156,7 @@ def event_prediction_lock(outcomes):
         total_points += outcome['channel_points']
 
     for i, outcome in enumerate(outcomes):
-        split = outcome['channel_points'] / total_points * 100
+        split = outcome['channel_points'] / total_points * 100 #zerodiv exc if no one bet
         if i != 0:
             split_string += f"/{round(split)}"
         else:
@@ -212,13 +211,12 @@ def read_data(q): #TODO better name
         try: 
             select.select([IRC], [], [], 4) #block until timeout, unless irc msg, then don't block
             
-            if q.qsize() != 0:
+            if q.qsize() != 0: #auto pred from livesplit server or notification from eventsub
                 data = q.get() #collision?
                 
-                if type(data) == str: #livesplit
-                    x = data.split()
-                    create_prediction(x[1])
-                else: #notification
+                if type(data) == str:
+                    create_prediction(data)
+                else: #dict
                     e_status = data['status'] #.end resolved/canceled
                     outcomes = data['outcomes'] #list
                     winning_id = data['winning_id']
@@ -250,22 +248,22 @@ def read_data(q): #TODO better name
                     chat_msg = i[i.find(':', 1)+1:]
                     print(f"{username}: {chat_msg}")
 
-                    if username in mods: #mod only commands
-                        resp = None
+                    if username in mods: #mod commands
+                        response = None
                         match chat_msg.split():
                             case ["pred", "start", name]:
-                                resp = create_prediction(name)
+                                response = create_prediction(name)
 
                             case ["pred", "lock"]: #LOCKED
-                                resp = end_prediction("LOCK")
+                                response = end_prediction("LOCK")
                             
                             case ["pred", "outcome", outcome] if 0 < int(outcome) <= 10:
-                                resp = resolve_prediction(int(outcome))
+                                response = resolve_prediction(int(outcome))
                                     
                             case ["pred", "cancel"]: #CANCELED 
-                                resp = end_prediction("CANCEL")
+                                response = end_prediction("CANCEL")
 
-                        if resp != None: send_data(f"PRIVMSG {CHANNEL} :{resp}")
+                        if response != None: send_data(f"PRIVMSG {CHANNEL} :{response}")
 
                     #TODO normal commands                        
         except ssl.SSLWantReadError: #happens after timeout
@@ -297,17 +295,15 @@ def create_prediction(pred_name):
         preds = json.load(file)
 
     not_found = True
+    options = ""
     for i in preds['predictions']:
+        options += f"{i['name']} "
         if i['name'] == pred_name: #match
             i['data']['broadcaster_id'] = B_ID
             data = i['data']
             not_found = False
-            break
         
     if not_found:
-        options = ""
-        for option in preds['list']:
-            options += f"{option} "
         return f"Possibilities: {options}"
 
     while True:
@@ -376,7 +372,6 @@ def end_prediction(action): #LOCK or CANCEL
             if status != "ACTIVE":
                 if status == "LOCKED":
                     return "Already locked"
-                
                 return "No active predictions"
         case "CANCEL":
             if status not in ("ACTIVE", "LOCKED"):
@@ -423,7 +418,6 @@ async def event_handler(q):
                     match buffer['metadata']['message_type']:
                         case 'session_welcome': #first msg after connecting
                             session_id = buffer['payload']['session']['id']
-
                             with open(f'tokens/token_broad.json') as token_file:
                                 token = json.load(token_file)
                                 token_broad = token['access_token']
@@ -451,7 +445,7 @@ async def event_handler(q):
             continue
 
 
-def queue_object(q, buffer):
+def queue_object(q, buffer): #parsing data to write to chat
     event_type = buffer['payload']['subscription']['type']
     e_status = "xdd"
     winning_id = "xdd"
@@ -513,30 +507,33 @@ def sub_to_event(q, session_id, event_type):
                 break
 
 
-def waiting_process(): #TODO better name 
+def waiting_process():
     try:
         while True:
             time.sleep(3600) #validate every hour
             old_process = mp.active_children()[0] #indexError = no child
             old_event_process = mp.active_children()[1]
+            old_prediction_process = mp.active_children()[2]
             http_code = validate_token('bot')
             http_code2 = validate_token('broad')
 
             if http_code == 200 and http_code2 == 200: 
-                pass
+                continue
             elif http_code == 401 or http_code2 == 401: 
                 print("\n[+] Reconnecting...")
                 old_process.terminate()
                 old_event_process.terminate()
+                old_prediction_process.terminate()
         
-                new_process = mp.Process(target=run, args=(q,))
-                new_process.daemon = True
+                new_process = mp.Process(target=run, daemon=True, args=(q,))
                 new_process.start()
 
                 time.sleep(3)
-                event_process = mp.Process(target=event_sub, args=(q,))
-                event_process.daemon = True
+                event_process = mp.Process(target=event_sub, daemon=True, args=(q,))
                 event_process.start()
+
+                prediction_process = mp.Process(target=auto_predictions, daemon=True, args=(q,CFG))
+                prediction_process.start()
             else:
                 print(f"[+] Unknown error: code {http_code} / {http_code2}")
                 old_process.terminate()
@@ -561,9 +558,9 @@ def event_sub(q):
     asyncio.run(event_handler(q))
 
 
-def auto_predictions(q):
+def auto_predictions(q, CFG):
     predictions.get_self_starting_predictions()
-    predictions.main(q)
+    predictions.main(q, CFG)
 
 
 if __name__ == "__main__":
@@ -576,7 +573,7 @@ if __name__ == "__main__":
     event_process = mp.Process(target=event_sub, daemon=True, args=(q,))
     event_process.start()
 
-    prediction_process = mp.Process(target=auto_predictions, daemon=True, args=(q,))
+    prediction_process = mp.Process(target=auto_predictions, daemon=True, args=(q,CFG))
     prediction_process.start()
 
     waiting_process()
