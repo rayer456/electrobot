@@ -25,6 +25,7 @@ Follow their instructions and you should end up with an application in [your con
 
 Once you see your application click on manage.
 
+- Give the application a unique name
 - Set **OAuth Redirect URLs** to `http://localhost:8777`.
  The port doesn't really matter as long as it's not used elsewhere.
 - In **Category** choose Chat Bot.
@@ -37,7 +38,7 @@ Head back to the folder where you extracted electrobot and open the `config` fol
 
 1. Copy `config-example.toml` and rename the copy to `config.toml`.
 2. Open `config.toml` and change the value in `CLIENT_ID` to the client ID you noted down earlier.
-3. Do the same thing with `CLIENT_SECRET` and `REDIRECT_URI`.
+3. Do the same thing with `CLIENT_SECRET` and `REDIRECT_URI`. If you used localhost:8777 no need to change that last field.
 4. If you didn't use port 8777 you **MUST** also change the `PORT` field under `[socket]` as by default it is set to 8777.
 5. Under `[irc]` change the value in `CHANNEL` to your Twitch channel. **NOTE**: this must be in lowercase.
 6. Finally change the value in `BOT_ACCOUNT` to the Twitch channel of your bot.
