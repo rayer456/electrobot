@@ -3,6 +3,7 @@ __pycache__
 config/config.toml
 tokens/*
 test.py
+test2.py
 
 # keep tokens folder
 !tokens/.gitkeep 

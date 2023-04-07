@@ -10,6 +10,7 @@ import multiprocessing as mp
 import select
 from operator import itemgetter
 from config import config_file as CFG
+import predictions
 
 
 HOST = CFG['irc']['HOST']
@@ -211,19 +212,23 @@ def read_data(q): #TODO better name
         try: 
             select.select([IRC], [], [], 4) #block until timeout, unless irc msg, then don't block
             
-            if q.qsize() != 0: #notification
+            if q.qsize() != 0:
                 data = q.get() #collision?
-                event_type = data['type']
-                e_status = data['status'] #.end resolved/canceled
-                outcomes = data['outcomes'] #list
-                winning_id = data['winning_id']
+                
+                if type(data) == str: #livesplit
+                    x = data.split()
+                    create_prediction(x[1])
+                else: #notification
+                    e_status = data['status'] #.end resolved/canceled
+                    outcomes = data['outcomes'] #list
+                    winning_id = data['winning_id']
 
-                if event_type.endswith("begin"):
-                    send_data(f"PRIVMSG {CHANNEL} :🎰BETS ARE OPEN🎰")
-                elif event_type.endswith("lock"):
-                    event_prediction_lock(outcomes)
-                elif event_type.endswith("end"):
-                    event_prediction_end(outcomes, e_status, winning_id)
+                    if data['type'].endswith("begin"):
+                        send_data(f"PRIVMSG {CHANNEL} :🎰BETS ARE OPEN🎰")
+                    elif data['type'].endswith("lock"):
+                        event_prediction_lock(outcomes)
+                    elif data['type'].endswith("end"):
+                        event_prediction_end(outcomes, e_status, winning_id)
                     
             buffer = IRC.recv(1024).decode() #non-blocking
             buffer = buffer.replace(' \U000e0000', '') #happens when spamming?
@@ -556,16 +561,22 @@ def event_sub(q):
     asyncio.run(event_handler(q))
 
 
+def auto_predictions(q):
+    predictions.get_self_starting_predictions()
+    predictions.main(q)
+
+
 if __name__ == "__main__":
     q = mp.Queue()
 
-    process = mp.Process(target=run, args=(q,))
-    process.daemon = True #kill child if parent dies
+    process = mp.Process(target=run, daemon=True, args=(q,)) #kill child if parent dies
     process.start() #child
 
     time.sleep(3)
-    event_process = mp.Process(target=event_sub, args=(q,))
-    event_process.daemon = True
+    event_process = mp.Process(target=event_sub, daemon=True, args=(q,))
     event_process.start()
+
+    prediction_process = mp.Process(target=auto_predictions, daemon=True, args=(q,))
+    prediction_process.start()
 
     waiting_process()

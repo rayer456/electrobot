@@ -3,6 +3,10 @@
     "predictions": [
         {
             "name": "bike",
+            "auto_predict": {
+                "auto_start": true,
+                "split_name": "complications"
+            },
             "data": {
                 "broadcaster_id": "xdd",
                 "title": "Parked bike?",
@@ -19,6 +23,10 @@
         },
         {
             "name": "5530",
+            "auto_predict": {
+                "auto_start": false,
+                "split_name": ""
+            },
             "data": {
                 "broadcaster_id": "xdd",
                 "title": "Sub 55:30 trevis?",
@@ -35,6 +43,10 @@
         },
         {
             "name": "gauntlet",
+            "auto_predict": {
+                "auto_start": true,
+                "split_name": "Three's"
+            },
             "data": {
                 "broadcaster_id": "xdd",
                 "title": "Free gauntlet?",
@@ -46,11 +58,15 @@
                         "title": "no"
                     }
                 ],
-                "prediction_window": 600
+                "prediction_window": 900
             }
         },
         {
             "name": "tow",
+            "auto_predict":{
+                "auto_start": true,
+                "split_name": "Minisub"
+            },
             "data": {
                 "broadcaster_id": "xdd",
                 "title": "Free tow truck?",
@@ -62,11 +78,15 @@
                         "title": "no"
                     }
                 ],
-                "prediction_window": 600
+                "prediction_window": 510
             }
         },
         {
             "name": "rich_switch",
+            "auto_predict":{
+                "auto_start": true,
+                "split_name": "IFTL"
+            },
             "data": {
                 "broadcaster_id": "xdd",
                 "title": "What switch on Mr. Richards?",
@@ -81,11 +101,15 @@
                         "title": "Other"
                     }
                 ],
-                "prediction_window": 600
+                "prediction_window": 900
             }
         },
         {
             "name": "meat_switch",
+            "auto_predict":{
+                "auto_start": true,
+                "split_name": "Pack Man"
+            },
             "data": {
                 "broadcaster_id": "xdd",
                 "title": "What switch on Fresh Meat?",
@@ -103,11 +127,15 @@
                         "title": "Other"
                     }
                 ],
-                "prediction_window": 600
+                "prediction_window": 360
             }
         },
         {
             "name": "cleaning",
+            "auto_predict":{
+                "auto_start": true,
+                "split_name": "Cleaning"
+            },
             "data": {
                 "broadcaster_id": "xdd",
                 "title": "Which car on cleaning?",
@@ -119,11 +147,15 @@
                         "title": "5th"
                     }
                 ],
-                "prediction_window": 600
+                "prediction_window": 180
             }
         },
         {
             "name": "train",
+            "auto_predict":{
+                "auto_start": true,
+                "split_name": "Legal Trouble"
+            },
             "data": {
                 "broadcaster_id": "xdd",
                 "title": "Blocked by train?",
@@ -140,6 +172,10 @@
         },
         {
             "name": "yomp",
+            "auto_predict":{
+                "auto_start": true,
+                "split_name": "Big Score"
+            },
             "data": {
                 "broadcaster_id": "xdd",
                 "title": "Successful yomp?",
@@ -156,6 +192,10 @@
         },
         {
             "name": "wr",
+            "auto_predict":{
+                "auto_start": false,
+                "split_name": ""
+            },
             "data": {
                 "broadcaster_id": "xdd",
                 "title": "World record?",
@@ -175,6 +215,10 @@
         },
         {
             "name": "pb",
+            "auto_predict":{
+                "auto_start": false,
+                "split_name": ""
+            },
             "data": {
                 "broadcaster_id": "xdd",
                 "title": "PB?",
