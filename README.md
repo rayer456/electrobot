@@ -5,9 +5,8 @@ Twitch chat bot that among other things manages predictions via chat commands. A
 ## Prerequisites
 
 - [Python](https://www.python.org/downloads/) (Add to PATH during installation)
-- [Livesplit](https://livesplit.org/downloads/)
-- [Livesplit Server](https://github.com/LiveSplit/LiveSplit.Server/releases)
-- A Twitch account (with 2FA enabled)
+- [Livesplit](https://livesplit.org/downloads/) and [Livesplit Server](https://github.com/LiveSplit/LiveSplit.Server)
+- A Twitch account (Affiliate) (with 2FA enabled)
 - A Twitch bot account (you CAN use your streaming account)
 
 ## Installation
@@ -46,25 +45,31 @@ Head back to the folder where you extracted electrobot and open the `config` fol
 6. Finally change the value of `BOT_ACCOUNT` to the Twitch channel of your bot.
 7. Save
 
+You can make predictions start automatically based on Livesplit by using the [Livesplit Server](https://github.com/LiveSplit/LiveSplit.Server) component. You know it works when you right click on Livesplit, navigate to Control > Start Server
+
+In the `predictions` folder you find `predictions.json`. This is where you manage what predictions the bot can start either by Livesplit or chat command. Try to open this file.
+
+1. In the `name` field you choose the name of the prediction. This is how you call the prediction from chat. **NOTE**: This must be a string without spaces. So instead of calling it `my name` call it `my_name`
+2. In `auto_predict` set `auto_start` to `true` if you want the prediction to start automatically based on Livesplit. If not, set to `false`
+3. If you set `auto_start` to `true`, you must fill in `split_name` with a split name in Livesplit. When this split starts, a prediction will start, unless a prediction is still active.
+4. In `data` set `title` to your prediction title. This is what your viewers will see when a prediction starts. For example: *Will I beat this level today?* Maximum of 45 characters.
+5. In `outcomes` you can add a maximum of 10 different outcomes with a minimum of 2. Each of them requires a `title`. Maximum of 25 characters
+6. In `prediction_window` you set the time in seconds that the prediction will run for with a minimum of 30 and maximum of 1800 (30 minutes).
+7. You can create as many predictions as you want. 
+8. Make sure the JSON data is valid by using an online tool like https://jsonformatter.org/ or https://jsonlint.com/
+
 ## Usage
 
-authorize.py
-electrobot.py
+Run `authorize.py`. The script will ask you whether to authenticate with a bot or streamer account and will then open your default browser. Make sure to authorize the right account after typing in `bot` or `streamer`.
+
+You need to run `authorize.py` twice (once for streamer account and once for bot account). You can use your streaming account as bot if you want to.
+
+Run `electrobot.py` to start the bot
 
 - Start predictions with `pred start <name>`
+    - `name` must correspond to the `name` field of a prediction in `predictions.json`
 - Lock predictions with `pred lock`
-
-
-
-
-
-
-
-
-
-
-
-
-
+- Resolve predictions with `pred outcome <1-10>`
+- Cancel predictions with `pred cancel`
 
 
