@@ -4,7 +4,7 @@ config/config.toml
 tokens/*
 test.py
 test2.py
-predictions/predictions.json
+predictions/self
 
 # keep tokens folder
 !tokens/.gitkeep 
