@@ -1,3 +1,3 @@
-python authorize.py
+python main/authorize.py
 
 cmd /k

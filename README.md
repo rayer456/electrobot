@@ -7,13 +7,12 @@ Twitch chat bot that among other things manages predictions via chat commands. A
 - [Python](https://www.python.org/downloads/) (Add to PATH during installation)
 - [Livesplit](https://livesplit.org/downloads/) and [Livesplit Server](https://github.com/LiveSplit/LiveSplit.Server)
 - A Twitch account (Affiliate) (with 2FA enabled)
-- A Twitch bot account (you CAN use your streaming account)
+- A Twitch bot account
 
 # Installation
 
 1. Download the ZIP file and extract.
-2. Open a command prompt by typing `cmd` in the address bar of that folder
-3. Type the following command to install the necessary packages:
+2. Run `requirements.bat` or run the following command:
 
 ```python
 pip install -r requirements.txt
@@ -23,7 +22,7 @@ pip install -r requirements.txt
 
 ## Register Application
 
-Since electrobot runs locally you must [register your own app](https://dev.twitch.tv/docs/authentication/register-app/) with Twitch, this only takes a few minutes.
+Since the bot runs locally you must [register your own app](https://dev.twitch.tv/docs/authentication/register-app/) with Twitch, this only takes a few minutes.
 Follow their instructions and you should end up with an application in [your console](https://dev.twitch.tv/console/apps).
 
 Once you see your application click on manage.
@@ -39,7 +38,7 @@ Once you see your application click on manage.
 
 ## Config.toml
 
-Open the `config` folder.
+Open the `main/config` folder.
 
 1. Copy `config-example.toml` and rename the copy to `config.toml`.
 2. Open `config.toml` and change the value in `CLIENT_ID` to the client ID you noted down earlier.
@@ -49,26 +48,62 @@ Open the `config` folder.
 6. Finally change the value of `BOT_ACCOUNT` to the Twitch channel of your bot.
 7. Save
 
-## Prediction.json
+## Predictions.json
 
-In the `predictions` folder you find `predictions.json`. This is where you manage a list of predictions that the bot can start either by Livesplit or chat command. Try to open this file.
+Open `main/predictions/predictions.json`, this is where you manage a list of predictions that the bot can start either by Livesplit or chat command. You can create as many predictions as you want.
 
 1. In the `name` field you choose the name of the prediction. This is how you call the prediction from chat. **NOTE**: This must be a string without spaces. So instead of calling it `my name` call it `my_name`
-2. In `auto_predict` set `auto_start` to `true` if you want the prediction to start automatically based on Livesplit. If not, set to `false`
+    ```json
+    "name": "bike"
+    ```
+2. Set `auto_start` to `true` if you want the prediction to start automatically based on Livesplit. If not, set to `false`
 3. If you set `auto_start` to `true`, you must fill in `split_name` with a split name in Livesplit. When this split starts, a prediction will start, unless a prediction is still active.
+    ```json
+    "auto_predict": {
+                    "auto_start": true,
+                    "split_name": "complications"
+                    }
+    ```
 4. In `data` set `title` to your prediction title. This is what your viewers will see when a prediction starts. For example: *Will I beat this level today?* Maximum of 45 characters.
+    ```json
+    "title": "Parked bike?"
+    ```
 5. In `outcomes` you can add a maximum of 10 different outcomes with a minimum of 2. Each of them requires a `title`. Maximum of 25 characters
+    ```json
+    {
+        "title": "yes"
+    },
+    {
+        "title": "no"
+    }
+    ```
 6. In `prediction_window` you set the time in seconds that the prediction will run for with a minimum of 30 and maximum of 1800 (30 minutes).
-7. You can create as many predictions as you want. 
-8. Make sure the JSON data is valid by using an online tool like https://jsonformatter.org/ or https://jsonlint.com/
+    ```json
+    "prediction_window": 600
+    ``` 
+7. Make sure the JSON data is valid by using an online tool like https://jsonformatter.org/ or https://jsonlint.com/
 
 # Usage
 
-Run `authorize.py`. The script will ask you whether to authenticate with a bot or streamer account and will then open your default browser. Make sure to authorize the right account after typing in `bot` or `streamer`.
+## Authorization
 
-You need to run `authorize.py` twice (once for streamer account and once for bot account). You can use your streaming account as bot if you want to. Make sure the bot is a moderator in your channel.
+Run `authorize.bat`. The script will ask you to authenticate with a bot or streamer account and will then open your default browser. Make sure to authorize the correct account after typing in `bot` or `streamer`.
 
-Run `electrobot.py` to start the bot
+**You need to run `authorize.bat` twice**,once for a streamer account and once for a bot account. You can use your streaming account as bot if you want to. Make sure the bot is a moderator in your channel.
+
+If both accounts are authorized you should only need to rerun `authorize.bat` if you change your Twitch password or disconnect the integration which you can do on [this page](https://www.twitch.tv/settings/connections) under **Other connections**.
+
+## Livesplit
+
+You can make predictions start automatically based on Livesplit splits by using the [Livesplit Server](https://github.com/LiveSplit/LiveSplit.Server) component. You know it works when you right click on Livesplit, click Control and Start Server should be there. Make sure to start Livesplit Server **before** you start the bot.
+
+If you've configured `predictions.json` correctly a prediction should start when the given split name starts.
+
+The default port on which Livesplit Server runs is 16834, if you use a different port, you must also change the port in `config.toml`
+
+## Starting the bot
+
+Run `electrobot.bat` to start the bot.  
 
 - Start predictions with `pred start <name>`
     - `name` must correspond to the `name` field of a prediction in `predictions.json`
@@ -76,8 +111,6 @@ Run `electrobot.py` to start the bot
 - Resolve predictions with `pred outcome <1-10>`
 - Cancel predictions with `pred cancel`
 
-You can make predictions start automatically based on Livesplit splits by using the [Livesplit Server](https://github.com/LiveSplit/LiveSplit.Server) component. You know it works when you right click on Livesplit, click Control and Start Server should be there. Make sure to launch Livesplit Server **before** you start the bot.
 
-If you've configured `predictions.json` correctly a prediction should start when the given split name starts.
 
 

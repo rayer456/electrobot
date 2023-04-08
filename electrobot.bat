@@ -1,3 +1,3 @@
-python electrobot.py
+python main/electrobot.py
 
 cmd /k
