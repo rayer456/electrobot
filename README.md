@@ -39,7 +39,7 @@ Once you see your application click on manage.
 
 ## Config.toml
 
-Head back to the folder where you extracted electrobot and open the `config` folder.
+Open the `config` folder.
 
 1. Copy `config-example.toml` and rename the copy to `config.toml`.
 2. Open `config.toml` and change the value in `CLIENT_ID` to the client ID you noted down earlier.
