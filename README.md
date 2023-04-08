@@ -51,7 +51,7 @@ Open the `config` folder.
 
 ## Prediction.json
 
-In the `predictions` folder you find `predictions.json`. This is where you manage what predictions the bot can start either by Livesplit or chat command. Open this file and try to understand how it works.
+In the `predictions` folder you find `predictions.json`. This is where you manage a list of predictions that the bot can start either by Livesplit or chat command. Try to open this file.
 
 1. In the `name` field you choose the name of the prediction. This is how you call the prediction from chat. **NOTE**: This must be a string without spaces. So instead of calling it `my name` call it `my_name`
 2. In `auto_predict` set `auto_start` to `true` if you want the prediction to start automatically based on Livesplit. If not, set to `false`
