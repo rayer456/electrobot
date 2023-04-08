@@ -6,7 +6,6 @@ import websockets
 import asyncio
 import ssl
 import json
-import sys
 import multiprocessing as mp
 import select
 from operator import itemgetter
