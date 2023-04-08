@@ -6,6 +6,7 @@ import websockets
 import asyncio
 import ssl
 import json
+import sys
 import multiprocessing as mp
 import select
 from operator import itemgetter
@@ -37,7 +38,7 @@ def refresh_token(refr_token, br=''):
 
             print(f"[+] 200: Stored new token in token{br}.json")
         case 400:
-            print("[+] Invalid refresh token, run authorize.py")
+            print("[+] Invalid refresh token, run authorize.bat")
             exit()
         case _:
             print(f"[+] {response.status_code}: Unknown error")
@@ -55,11 +56,11 @@ def validate_token(br, q=None): #which one
                 break
         except json.JSONDecodeError: #not readable
             print("[+] Removing bad file")
-            print("[+] Run authorize.py")
+            print("[+] Run authorize.bat")
             os.remove(f'tokens/token_{br}.json')
             exit() #parent will die on hourly check, if not by user
         except FileNotFoundError:
-            print("[+] No tokens, run authorize.py")
+            print("[+] No tokens, run authorize.bat")
             exit()
     
     headers = {"Authorization": f"OAuth {token['access_token']}"}
