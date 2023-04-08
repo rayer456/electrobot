@@ -11,7 +11,7 @@ Twitch chat bot that among other things manages predictions via chat commands. A
 
 # Installation
 
-1. Download the ZIP file and extract in a folder
+1. Download the ZIP file and extract.
 2. Open a command prompt by typing `cmd` in the address bar of that folder
 3. Type the following command to install the necessary packages:
 
