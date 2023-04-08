@@ -2,16 +2,16 @@
 
 Twitch chat bot that among other things manages predictions via chat commands. And start predictions based on Livesplit splits.
 
-## Prerequisites
+# Prerequisites
 
 - [Python](https://www.python.org/downloads/) (Add to PATH during installation)
 - [Livesplit](https://livesplit.org/downloads/) and [Livesplit Server](https://github.com/LiveSplit/LiveSplit.Server)
 - A Twitch account (Affiliate) (with 2FA enabled)
 - A Twitch bot account (you CAN use your streaming account)
 
-## Installation
+# Installation
 
-1. Download the ZIP file and extract in a folder
+1. Download the ZIP file and extract.
 2. Open a command prompt by typing `cmd` in the address bar of that folder
 3. Type the following command to install the necessary packages:
 
@@ -19,7 +19,9 @@ Twitch chat bot that among other things manages predictions via chat commands. A
 pip install -r requirements.txt
 ```
 
-## Configuration
+# Configuration
+
+## Register Application
 
 Since electrobot runs locally you must [register your own app](https://dev.twitch.tv/docs/authentication/register-app/) with Twitch, this only takes a few minutes.
 Follow their instructions and you should end up with an application in [your console](https://dev.twitch.tv/console/apps).
@@ -27,7 +29,7 @@ Follow their instructions and you should end up with an application in [your con
 Once you see your application click on manage.
 
 1. Give the application a unique name
-2. Set **OAuth Redirect URLs** to `http://localhost:8777`.
+2. Set **OAuth Redirect URLs** to http://localhost:8777
  The port doesn't really matter as long as it's not used elsewhere.
 3. In **Category** choose Chat Bot.
 4. Click I'm not a robot, then Save
@@ -35,7 +37,9 @@ Once you see your application click on manage.
 6. Click on New Secret and also note this down.
 7. Save
 
-Head back to the folder where you extracted electrobot and open the `config` folder.
+## Config.toml
+
+Open the `config` folder.
 
 1. Copy `config-example.toml` and rename the copy to `config.toml`.
 2. Open `config.toml` and change the value in `CLIENT_ID` to the client ID you noted down earlier.
@@ -45,9 +49,9 @@ Head back to the folder where you extracted electrobot and open the `config` fol
 6. Finally change the value of `BOT_ACCOUNT` to the Twitch channel of your bot.
 7. Save
 
-You can make predictions start automatically based on Livesplit by using the [Livesplit Server](https://github.com/LiveSplit/LiveSplit.Server) component. You know it works when you right click on Livesplit, navigate to Control > Start Server
+## Prediction.json
 
-In the `predictions` folder you find `predictions.json`. This is where you manage what predictions the bot can start either by Livesplit or chat command. Try to open this file.
+In the `predictions` folder you find `predictions.json`. This is where you manage a list of predictions that the bot can start either by Livesplit or chat command. Try to open this file.
 
 1. In the `name` field you choose the name of the prediction. This is how you call the prediction from chat. **NOTE**: This must be a string without spaces. So instead of calling it `my name` call it `my_name`
 2. In `auto_predict` set `auto_start` to `true` if you want the prediction to start automatically based on Livesplit. If not, set to `false`
@@ -58,11 +62,11 @@ In the `predictions` folder you find `predictions.json`. This is where you manag
 7. You can create as many predictions as you want. 
 8. Make sure the JSON data is valid by using an online tool like https://jsonformatter.org/ or https://jsonlint.com/
 
-## Usage
+# Usage
 
 Run `authorize.py`. The script will ask you whether to authenticate with a bot or streamer account and will then open your default browser. Make sure to authorize the right account after typing in `bot` or `streamer`.
 
-You need to run `authorize.py` twice (once for streamer account and once for bot account). You can use your streaming account as bot if you want to.
+You need to run `authorize.py` twice (once for streamer account and once for bot account). You can use your streaming account as bot if you want to. Make sure the bot is a moderator in your channel.
 
 Run `electrobot.py` to start the bot
 
@@ -71,5 +75,9 @@ Run `electrobot.py` to start the bot
 - Lock predictions with `pred lock`
 - Resolve predictions with `pred outcome <1-10>`
 - Cancel predictions with `pred cancel`
+
+You can make predictions start automatically based on Livesplit splits by using the [Livesplit Server](https://github.com/LiveSplit/LiveSplit.Server) component. You know it works when you right click on Livesplit, click Control and Start Server should be there. Make sure to launch Livesplit Server **before** you start the bot.
+
+If you've configured `predictions.json` correctly a prediction should start when the given split name starts.
 
 
