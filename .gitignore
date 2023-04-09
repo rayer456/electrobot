@@ -1,10 +1,7 @@
 __pycache__
 .vscode
-main/config/config.toml
-main/tokens/*
+config/config.toml
+tokens/
 test.py
 test2.py
-main/predictions/self
-
-# keep tokens folder
-!main/tokens/.gitkeep 
+predictions.json

@@ -34,10 +34,9 @@ def refresh_token(refr_token, br=''):
         case 200:
             with open(f'tokens/token_{br}.json', 'w') as file:
                 file.write(response.text) #json response
-
             print(f"[+] 200: Stored new token in token{br}.json")
         case 400:
-            print("[+] Invalid refresh token, run authorize.bat")
+            print("[+] Invalid refresh token, run authorize.py")
             exit()
         case _:
             print(f"[+] {response.status_code}: Unknown error")
@@ -55,11 +54,14 @@ def validate_token(br, q=None): #which one
                 break
         except json.JSONDecodeError: #not readable
             print("[+] Removing bad file")
-            print("[+] Run authorize.bat")
+            print("[+] Run authorize.py")
             os.remove(f'tokens/token_{br}.json')
             exit() #parent will die on hourly check, if not by user
         except FileNotFoundError:
-            print("[+] No tokens, run authorize.bat")
+            if br == 'bot':
+                print("[+] No bot token, run authorize.py")
+            else:
+                print("[+] No streamer token, run authorize.py")
             exit()
     
     headers = {"Authorization": f"OAuth {token['access_token']}"}
@@ -74,7 +76,7 @@ def validate_token(br, q=None): #which one
                 if q != None: 
                     q.put(token_broad)
 
-            print(f"\n[+] TOKEN VALIDATED | time left: {token['expires_in']}s")
+            print(f"\n[+] TOKEN VALIDATED")
         case 401: #unauth, expired
             print("[+] Token expired, refreshing...")
             refresh_token(token['refresh_token'], br) #refreshing json
@@ -180,7 +182,7 @@ def event_prediction_end(outcomes, e_status, winning_id):
             if i != 0:
                 winner_string += f", {winner['user_name']} (+{winner['channel_points_won']:,})"
             else:
-                winner_string = f"Pogue {winner['user_name']} (+{winner['channel_points_won']:,})"
+                winner_string = f"GIGACHAD {winner['user_name']} (+{winner['channel_points_won']:,})"
         
         if len(winning_outcome['top_predictors']) != 0: #if no one won
             send_data(f"PRIVMSG {CHANNEL} :{winner_string}")
@@ -202,7 +204,7 @@ def event_prediction_end(outcomes, e_status, winning_id):
             send_data(f"PRIVMSG {CHANNEL} :{loser_string}")
         
     else: #canceled
-        send_data(f"PRIVMSG {CHANNEL} :Prediction canceled SadBalls") #balls
+        send_data(f"PRIVMSG {CHANNEL} :Prediction canceled SadgeCry") #balls
 
 
 def read_data(q): #TODO better name
@@ -424,7 +426,8 @@ async def event_handler(q):
                                 
                             event_list = ["channel.prediction.begin", "channel.prediction.lock", "channel.prediction.end"]
                             for event in event_list:
-                                sub_to_event(q, session_id, event)    
+                                sub_to_event(q, session_id, event)
+                            print("[+] Listening for predictions...")    
                         case 'session_keepalive': continue #every 10s
                         case 'notification':
                             print("[+] notification received")
@@ -490,8 +493,7 @@ def sub_to_event(q, session_id, event_type):
 
         response = requests.post('https://api.twitch.tv/helix/eventsub/subscriptions', headers=headers, json=data)
         match response.status_code:
-            case 202: 
-                print("[+] Subbed to event")
+            case 202:
                 break
             case 400:
                 print("[+] Bad request" + response.text)

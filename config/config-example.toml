@@ -1,3 +1,5 @@
+#Check out the README file on how to configure this file!
+
 [socket]
 HOST = "127.0.0.1" #localhost
 PORT = 8777
@@ -19,8 +21,8 @@ BROAD_SCOPE = "channel%3Amanage%3Apredictions+moderation%3Aread"
 [irc]
 HOST = "irc.chat.twitch.tv"
 PORT = 6697
-CHANNEL = "rayer_sr" #your channel, MUST BE LOWERCASE
-BOT_ACCOUNT = "rayersbot" #twitch account for bot
+CHANNEL = "rayer_sr" #MUST BE LOWERCASE
+BOT_ACCOUNT = "rayersbot"
 
 [eventsub]
 HOST = "wss://eventsub-beta.wss.twitch.tv/ws"

@@ -10,12 +10,12 @@ def main(q, CFG):
     try:
         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
             sock.connect((CFG['livesplit']['HOST'], CFG['livesplit']['PORT']))
-            sock.settimeout(2.0)
+            sock.settimeout(0.5)
             print("[+] Connected to Livesplit Server\n")
 
             while True:
                 try:
-                    sleep(5)
+                    sleep(1)
                     sock.send(b"getcurrentsplitname\r\n")
                     split_name = sock.recv(1024).decode().rstrip() #remove \r\n
                     
@@ -31,11 +31,12 @@ def main(q, CFG):
                             
                     #do things based on name and/or time
 
-                except TimeoutError: #user reset, add new predictions again
+                except TimeoutError: #run reset, add predictions again
                     get_self_starting_predictions()
                     continue
     except ConnectionRefusedError:
-        print('[!!!!] Start Livesplit Server')
+        print('[!!!!] Predictions will not start automatically by split')
+        print('[!!!!] Start Livesplit Server and restart the bot')
 
 
 def get_self_starting_predictions():
@@ -44,7 +45,7 @@ def get_self_starting_predictions():
     with open('predictions/predictions.json', 'r') as file:
         data = json.load(file)
 
-    auto_predictions = [] #predictions that auto start based on current split
+    auto_predictions = [] #auto start based on current split
     for p in data['predictions']:
         if p['auto_predict']['auto_start'] == True:
             auto_pred = {

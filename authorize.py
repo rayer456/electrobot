@@ -1,3 +1,4 @@
+import os
 import socket
 import requests
 import webbrowser
@@ -32,7 +33,6 @@ def get_code(type_token):
         with conn:
             while True:
                 data = conn.recv(1024).decode('utf-8') #waiting
-                
                 if not data:
                     print("[+] Connection dropped?")
                     break
@@ -56,7 +56,7 @@ def get_code(type_token):
                     secret = y[y.find('=')+1:y.find('&')]
                     
                 print("[+] Authorized")
-                print("[+] Code received, requesting token...")
+                print("[+] Requesting token...")
                 get_token(secret, type_token)
                 break
 
@@ -73,10 +73,13 @@ def get_token(code, type_token):
     data = f'client_id={CLIENT_ID}&client_secret={CLIENT_SECRET}&code={code}&grant_type=authorization_code&redirect_uri={REDIRECT_URI}'
 
     response = requests.post('https://id.twitch.tv/oauth2/token', headers=headers, data=data)
-    print("[+] POST request sent to /token")
+    print("[+] Token requested...")
 
     match response.status_code:
         case 200:
+            if not os.path.exists('tokens'):
+                os.makedirs('tokens')
+
             with open(f'tokens/token_{type_token}.json', 'w') as file: 
                 file.write(response.text)
 
