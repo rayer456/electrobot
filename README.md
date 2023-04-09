@@ -13,10 +13,10 @@ Twitch chat bot that among other things manages predictions via chat commands an
 
 1. Download the ZIP file and extract.
 2. Run the following command:
+
     ```
     pip install -r requirements.txt
     ```
-
 # Configuration
 
 ## Register Application
