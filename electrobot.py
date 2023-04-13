@@ -420,6 +420,7 @@ async def event_handler(q):
                     match buffer['metadata']['message_type']:
                         case 'session_welcome': #first msg after connecting
                             session_id = buffer['payload']['session']['id']
+                            print(f"[+] welcome received: {session_id}")
                             with open(f'tokens/token_broad.json') as token_file:
                                 token = json.load(token_file)
                                 token_broad = token['access_token']
@@ -433,19 +434,27 @@ async def event_handler(q):
                             print("[+] notification received")
                             queue_object(q, buffer)
                         case 'session_reconnect':
+                            print("[+] reconnect received")
                             event_host = buffer['payload']['session']['reconnect_url']
                             break
                         case 'revocation':
                             event_type = buffer['payload']['subscription']['type']
                             reason = buffer['payload']['subscription']['status']
                             print(f'[+] Revoked: {event_type} reason: {reason}')
-                            exit()
+                            continue
                         case _:
                             print("[+] Unknown message")
                             exit()
         except TimeoutError: #no keepalive
             print("[+] Connection lost, reconnecting...")
             continue
+        except websockets.exceptions.ConnectionClosedError:
+            print("[+] Connection dropped?")
+            continue
+        except Exception as e:
+            print(f"[+] Websockets error: {e}")
+            continue
+
 
 
 def queue_object(q, buffer): #parsing data to write to chat
@@ -541,7 +550,7 @@ def waiting_process():
                 old_process.terminate()
                 old_event_process.terminate()
                 break
-
+            
     except IndexError:
         print("\n[+] Child process dead")
     except KeyboardInterrupt:

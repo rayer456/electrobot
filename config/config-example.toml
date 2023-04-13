@@ -9,8 +9,8 @@ HOST = "127.0.0.1"
 PORT = 16834
 
 [auth] #found when creating application dev.twitch.tv/console
-CLIENT_ID = "my_client_id"
-CLIENT_SECRET = "my_client_secret"
+CLIENT_ID = "YOUR_CLIENT_ID"
+CLIENT_SECRET = "YOUR_CLIENT_SECRET"
 REDIRECT_URI = "http://localhost:8777" #must match HOST/PORT in [socket] 
 CHANNEL_ID = ""
 
@@ -21,8 +21,8 @@ BROAD_SCOPE = "channel%3Amanage%3Apredictions+moderation%3Aread"
 [irc]
 HOST = "irc.chat.twitch.tv"
 PORT = 6697
-CHANNEL = "rayer_sr" #MUST BE LOWERCASE
-BOT_ACCOUNT = "rayersbot"
+CHANNEL = "YOUR_CHANNEL" #MUST BE LOWERCASE
+BOT_ACCOUNT = "YOUR_BOT"
 
 [eventsub]
-HOST = "wss://eventsub-beta.wss.twitch.tv/ws"
+HOST = "wss://eventsub.wss.twitch.tv/ws"
