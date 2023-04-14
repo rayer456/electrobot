@@ -5,6 +5,7 @@ import webbrowser
 import json
 import tomli_w
 from config import config_file as CFG
+import logger as LOG
 
 
 HOST = CFG['socket']['HOST']
@@ -21,20 +22,20 @@ def get_code(type_token):
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
         sock.bind((HOST, PORT))
         sock.listen()
-        print(f"\n[+] Listening on {HOST} on port {PORT}")
+        LOG.logger.debug(f"Authorize: Listening on {HOST} on port {PORT}")
 
         if type_token == 'bot':
             authorize(BOT_SCOPE)
         else: #broad
             authorize(BROAD_SCOPE)
-        print("\n[+] Browser opened, displaying authorization page")
+        LOG.logger.info("Browser opened, displaying authorization page")
 
         conn, addr = sock.accept() #blocking socket
         with conn:
             while True:
                 data = conn.recv(1024).decode('utf-8') #waiting
                 if not data:
-                    print("[+] Connection dropped?")
+                    LOG.logger.error("Connection dropped?")
                     break
 
                 conn.send('HTTP/1.0 200 OK\n'.encode('utf-8'))
@@ -50,13 +51,12 @@ def get_code(type_token):
                 
                 y = data.splitlines()[0].split()[1] #grab parameters
                 if y[y.find('?')+1:y.find('=')] == "error":
-                    print(f"[+] User didn't authorize")
+                    LOG.logger.info("User didn't authorize")
                     exit()
                 else:
                     secret = y[y.find('=')+1:y.find('&')]
                     
-                print("[+] Authorized")
-                print("[+] Requesting token...")
+                LOG.logger.info("Authorized")
                 get_token(secret, type_token)
                 break
 
@@ -73,7 +73,7 @@ def get_token(code, type_token):
     data = f'client_id={CLIENT_ID}&client_secret={CLIENT_SECRET}&code={code}&grant_type=authorization_code&redirect_uri={REDIRECT_URI}'
 
     response = requests.post('https://id.twitch.tv/oauth2/token', headers=headers, data=data)
-    print("[+] Token requested...")
+    LOG.logger.info("Token requested...")
 
     match response.status_code:
         case 200:
@@ -87,14 +87,14 @@ def get_token(code, type_token):
                 data = json.loads(response.text)
                 set_channel_id(data['access_token'])
 
-            print("[+] Stored tokens")
+            LOG.logger.info("Stored tokens")
             input("[+] All done!")
         case 400:
-            print("[+] Invalid client_id or code or grant_type")
+            LOG.logger.error("Token: Invalid client_id or code or grant_type")
         case 403:
-            print("[+] Invalid client secret")
+            LOG.logger.error("Token: Invalid client secret")
         case _:
-            print(f"[+] {response.status_code}: Unknown error")
+            LOG.logger.error(f"Token {response.status_code}: Unknown error")
 
 
 def set_channel_id(token_broad):

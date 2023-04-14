@@ -11,6 +11,7 @@ import select
 from operator import itemgetter
 from config import config_file as CFG
 import predictions
+import logger as LOG
 
 
 HOST = CFG['irc']['HOST']
@@ -21,8 +22,6 @@ CLIENT_ID = CFG['auth']['CLIENT_ID']
 CLIENT_SECRET = CFG['auth']['CLIENT_SECRET']
 B_ID = CFG['auth']['CHANNEL_ID']
 event_host = CFG['eventsub']['HOST']
-delay = 1
-attempts = 1
 
 
 def refresh_token(refr_token, br=''):
@@ -34,16 +33,16 @@ def refresh_token(refr_token, br=''):
         case 200:
             with open(f'tokens/token_{br}.json', 'w') as file:
                 file.write(response.text) #json response
-            print(f"[+] 200: Stored new token in token{br}.json")
+            LOG.logger.debug(f"200: Stored new token in token{br}.json")
         case 400:
-            print("[+] Invalid refresh token, run authorize.py")
+            LOG.logger.error("Invalid refresh token, run authorize.py")
             exit()
         case _:
-            print(f"[+] {response.status_code}: Unknown error")
+            LOG.logger.error("{response.status_code}: Unknown error")
             exit()
 
 
-def validate_token(br, q=None): #which one
+def validate_token(br, q=None):
     global token_bot
     global token_broad
     
@@ -53,15 +52,15 @@ def validate_token(br, q=None): #which one
                 token = json.load(token_file)
                 break
         except json.JSONDecodeError: #not readable
-            print("[+] Removing bad file")
-            print("[+] Run authorize.py")
+            LOG.logger.info("Removing bad file")
+            LOG.logger.info("Run authorize.py")
             os.remove(f'tokens/token_{br}.json')
             exit() #parent will die on hourly check, if not by user
         except FileNotFoundError:
             if br == 'bot':
-                print("[+] No bot token, run authorize.py")
+                LOG.logger.error("No bot token, run authorize.py")
             else:
-                print("[+] No streamer token, run authorize.py")
+                LOG.logger.error("No streamer token, run authorize.py")
             exit()
     
     headers = {"Authorization": f"OAuth {token['access_token']}"}
@@ -76,9 +75,9 @@ def validate_token(br, q=None): #which one
                 if q != None: 
                     q.put(token_broad)
 
-            print(f"\n[+] TOKEN VALIDATED")
+            LOG.logger.info("TOKEN VALIDATED")
         case 401: #unauth, expired
-            print("[+] Token expired, refreshing...")
+            LOG.logger.info("Token expired, refreshing...")
             refresh_token(token['refresh_token'], br) #refreshing json
 
             with open(f'tokens/token_{br}.json') as token_file:
@@ -91,7 +90,7 @@ def validate_token(br, q=None): #which one
                 if q != None: 
                     q.put(token_broad)
         case _:
-            print(f"[+] Unknown error /validate: code {response.status_code}")
+            LOG.logger.error(f"Unknown error validate_token: {response.status_code}")
             exit()
 
     return response.status_code
@@ -109,25 +108,24 @@ def IRC_connect():
     send_data(f"NICK {ACCOUNT}")
     send_data(f"JOIN {CHANNEL}")
 
-    print("\n[+] Connected to IRC Chat\n")
+    LOG.logger.info("Connected to IRC Chat")
 
 
 def IRC_reconnect():
     global delay, attempts
 
-    print("[+] Disconnected, reconnecting...")
+    LOG.logger.warning("Disconnected, reconnecting...")
     IRC.shutdown(2) #no more data sent/recv
     IRC.close()
 
-    print(f"[+] Waiting {delay}s...\n")
+    LOG.logger.warning(f"Waiting {delay}s...")
     time.sleep(delay)
     delay *= 2 #exp backoff
     attempts += 1
     
     if attempts == 7:
-        print(f"[+] Couldn't connect to the server, closing...")
+        LOG.logger.critical("Couldn't connect to the server, closing...")
         exit()
-
     IRC_connect()
 
 
@@ -207,7 +205,7 @@ def event_prediction_end(outcomes, e_status, winning_id):
         send_data(f"PRIVMSG {CHANNEL} :Prediction canceled SadgeCry") #balls
 
 
-def read_data(q): #TODO better name
+def read_data(q):
     mods = get_mods() #easier than parsing with /tags
     while True: 
         try: 
@@ -239,7 +237,7 @@ def read_data(q): #TODO better name
                 continue
 
             if msg[0] == "PING":
-                print("[+] Pinged")
+                LOG.logger.info("Pinged")
                 send_data(f"PONG {msg[1]}")  #user #type_msg #CHANNEL #message
 
             elif msg[1] == "PRIVMSG": #TODO commands, modcommands, song, pb, wr
@@ -248,7 +246,7 @@ def read_data(q): #TODO better name
                 for i in buffer_split:
                     username = i[i.find(':')+1:i.find('!')]
                     chat_msg = i[i.find(':', 1)+1:]
-                    print(f"{username}: {chat_msg}")
+                    #print(f"{username}: {chat_msg}")
 
                     if username in mods: #mod commands
                         response = None
@@ -266,12 +264,11 @@ def read_data(q): #TODO better name
                                 response = end_prediction("CANCEL")
 
                         if response != None: send_data(f"PRIVMSG {CHANNEL} :{response}")
-
-                    #TODO normal commands                        
+                      
         except ssl.SSLWantReadError: #happens after timeout
             continue             
-        except Exception as e:
-            print(f"[+] exception in read_data: {type(e)}")
+        except Exception:
+            LOG.logger.error("Exception in read_data", exc_info=True)
         
 
 def get_prediction():
@@ -324,7 +321,7 @@ def create_prediction(pred_name):
             case 401: #expired
                 validate_token('broad')
             case 429:
-                print("[+] Too many requests")
+                LOG.logger.warning("Too many requests")
                 break
 
 
@@ -356,12 +353,12 @@ def resolve_prediction(outcome):
             case 200:
                 break
             case 400:
-                print("[+] 400: Something went wrong")
+                LOG.logger.error("resolve_prediction: 400 Bad Request")
                 break
             case 401: #try again
                 validate_token('broad')
             case 404:
-                print("[+] 404: Not found")
+                LOG.logger.error("resolve_prediction: 404 Not found")
                 break
 
 
@@ -397,12 +394,12 @@ def end_prediction(action): #LOCK or CANCEL
             case 200:
                 break
             case 400:
-                print("[+] 400: Something went wrong")
+                LOG.logger.error("end_prediction: 400 Bad Request")
                 break
             case 401: #try again
                 validate_token('broad')
             case 404:
-                print("[+] 404: Not found")
+                LOG.logger.error("end_prediction: 404 Not found")
                 break
         
 
@@ -420,7 +417,7 @@ async def event_handler(q):
                     match buffer['metadata']['message_type']:
                         case 'session_welcome': #first msg after connecting
                             session_id = buffer['payload']['session']['id']
-                            print(f"[+] welcome received: {session_id}")
+                            LOG.logger.info("Eventsub: welcome")
                             with open(f'tokens/token_broad.json') as token_file:
                                 token = json.load(token_file)
                                 token_broad = token['access_token']
@@ -428,31 +425,31 @@ async def event_handler(q):
                             event_list = ["channel.prediction.begin", "channel.prediction.lock", "channel.prediction.end"]
                             for event in event_list:
                                 sub_to_event(q, session_id, event)
-                            print("[+] Listening for predictions...")    
+                            LOG.logger.info("Listening for predictions...")
                         case 'session_keepalive': continue #every 10s
                         case 'notification':
-                            print("[+] notification received")
+                            LOG.logger.info("Eventsub: notification")
                             queue_object(q, buffer)
                         case 'session_reconnect':
-                            print("[+] reconnect received")
+                            LOG.logger.warning("Eventsub: reconnect")
                             event_host = buffer['payload']['session']['reconnect_url']
                             break
                         case 'revocation':
                             event_type = buffer['payload']['subscription']['type']
                             reason = buffer['payload']['subscription']['status']
-                            print(f'[+] Revoked: {event_type} reason: {reason}')
-                            continue
+                            LOG.logger.error(f'Revoked: {event_type} reason: {reason}')
+                            break
                         case _:
-                            print("[+] Unknown message")
+                            LOG.logger.error("Unknown message")
                             exit()
         except TimeoutError: #no keepalive
-            print("[+] Connection lost, reconnecting...")
+            LOG.logger.warning("Connection lost, reconnecting...", exc_info=True)
             continue
         except websockets.exceptions.ConnectionClosedError:
-            print("[+] Connection dropped?")
+            LOG.logger.error("Eventsub: Connection closed", exc_info=True)
             continue
-        except Exception as e:
-            print(f"[+] Websockets error: {e}")
+        except Exception:
+            LOG.logger.error("Websockets error", exc_info=True)
             continue
 
 
@@ -503,18 +500,19 @@ def sub_to_event(q, session_id, event_type):
         response = requests.post('https://api.twitch.tv/helix/eventsub/subscriptions', headers=headers, json=data)
         match response.status_code:
             case 202:
+                LOG.logger.debug("Eventsub: Subbed to event")
                 break
             case 400:
-                print("[+] Bad request" + response.text)
+                LOG.logger.error(f"Eventsub: Bad request: {response.text}")
                 break
             case 401:
-                print("[+] Unauthorized")
+                LOG.logger.warning("Eventsub: Unauthorized")
                 validate_token('broad', q)
             case 403:
-                print("[+] Missing scopes")
+                LOG.logger.error("Eventsub: missing scopes")
                 break
             case _:
-                print(f"[+] Error on sub event: {response.status_code}")
+                LOG.logger.error(f"Eventsub: {response.status_code}")
                 break
 
 
@@ -531,7 +529,7 @@ def waiting_process():
             if http_code == 200 and http_code2 == 200: 
                 continue
             elif http_code == 401 or http_code2 == 401: 
-                print("\n[+] Reconnecting...")
+                LOG.logger.warning("Reconnecting...")
                 old_process.terminate()
                 old_event_process.terminate()
                 old_prediction_process.terminate()
@@ -546,19 +544,22 @@ def waiting_process():
                 prediction_process = mp.Process(target=auto_predictions, daemon=True, args=(q,CFG))
                 prediction_process.start()
             else:
-                print(f"[+] Unknown error: code {http_code} / {http_code2}")
+                LOG.logger.error(f"Unknown error: code {http_code} / {http_code2}")
                 old_process.terminate()
                 old_event_process.terminate()
                 break
-            
+
     except IndexError:
-        print("\n[+] Child process dead")
+        LOG.logger.error("Child process dead")
     except KeyboardInterrupt:
-        print("[+] Closing bot...")
+        LOG.logger.info("Closing bot...")
         exit()
 
 
 def run(q):
+    global delay, attempts
+    delay = 1
+    attempts = 1
     validate_token('bot')
     validate_token('broad')
     IRC_connect()
@@ -571,7 +572,7 @@ def event_sub(q):
 
 def auto_predictions(q, CFG):
     predictions.get_self_starting_predictions()
-    predictions.main(q, CFG)
+    predictions.main(q, CFG, LOG)
 
 
 if __name__ == "__main__":

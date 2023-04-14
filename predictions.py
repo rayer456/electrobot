@@ -4,14 +4,14 @@ from datetime import timedelta
 import json
 
 
-def main(q, CFG):
+def main(q, CFG, LOG):
     global auto_predictions
 
     try:
         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
             sock.connect((CFG['livesplit']['HOST'], CFG['livesplit']['PORT']))
             sock.settimeout(0.5)
-            print("[+] Connected to Livesplit Server\n")
+            LOG.logger.info("Connected to Livesplit Server")
 
             while True:
                 try:
@@ -28,6 +28,7 @@ def main(q, CFG):
                         if pred['split_name'].lower() == split_name.lower():
                             q.put(pred['name']) #send to other process
                             auto_predictions.remove(pred)
+                            LOG.logger.debug(f"Auto started at {split_name}")
                             
                     #do things based on name and/or time
 
@@ -35,8 +36,8 @@ def main(q, CFG):
                     get_self_starting_predictions()
                     continue
     except ConnectionRefusedError:
-        print('[!!!!] Predictions will not start automatically by split')
-        print('[!!!!] Start Livesplit Server and restart the bot')
+        LOG.logger.warning("Predictions will not start automatically by split")
+        LOG.logger.warning("Start Livesplit Server and restart the bot")
 
 
 def get_self_starting_predictions():
@@ -65,5 +66,4 @@ def convert_to_hms(raw_time):
         hours_in_seconds = int(hms_list[0]) * 3600
 
     total_seconds = hours_in_seconds + minutes_in_seconds + seconds
-
     return str(timedelta(seconds=total_seconds))
