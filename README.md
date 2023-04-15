@@ -11,8 +11,8 @@ Twitch chat bot that among other things manages predictions via chat commands an
 
 # Installation
 
-1. Download the ZIP file and extract.
-2. Run the following command:
+1. Download **electrobot.zip** from the [latest release](https://github.com/electrorayer/electrobot/releases) and extract.
+2. Run the following cmd command in the extracted folder:
 
     ```
     pip install -r requirements.txt
