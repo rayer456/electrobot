@@ -58,6 +58,8 @@ This is where you manage a list of "pre-made" predictions that the bot can start
     "name": "bike"
     ```
 - Set `auto_start` to `true` if you want the prediction to start automatically based on Livesplit. If not, set to `false`. If you set `auto_start` to `true`, you must fill in `split_name` with a split name in Livesplit. When this split starts, a prediction will start, unless a prediction is still active. 
+
+- **Note:** If you use subsplits don't forget the - before the actual split name
     ```json
     "auto_predict": {
                     "auto_start": true,

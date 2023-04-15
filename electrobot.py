@@ -8,6 +8,7 @@ import ssl
 import json
 import multiprocessing as mp
 import select
+import datetime
 from operator import itemgetter
 from config import config_file as CFG
 import predictions
@@ -147,6 +148,14 @@ def get_mods():
 
     return mods
 
+
+def event_prediction_begin(locks_at):
+    send_data(f"PRIVMSG {CHANNEL} :🎰🚨🎰BETS ARE OPEN, any gamblers? modCheck 🎰🚨🎰")
+    locks_at = locks_at.replace('T', ' ')[:locks_at.find('.')] #formatting
+    locks_at = datetime.datetime.strptime(locks_at, "%Y-%m-%d %H:%M:%S") - datetime.timedelta(seconds=35)
+
+    return datetime.datetime.strftime(locks_at, "%Y-%m-%d %H:%M:%S")
+
     
 def event_prediction_lock(outcomes):
     total_users, total_points = 0, 0
@@ -206,31 +215,41 @@ def event_prediction_end(outcomes, e_status, winning_id):
 
 
 def read_data(q):
-    mods = get_mods() #easier than parsing with /tags
+    pred_is_active = False
     while True: 
         try: 
-            select.select([IRC], [], [], 4) #block until timeout, unless irc msg, then don't block
+            select.select([IRC], [], [], 4) #block until timeout, unless irc msg
             
-            if q.qsize() != 0: #auto pred from livesplit server or notification from eventsub
+            if q.qsize() != 0: #from livesplit or eventsub
                 data = q.get() #collision?
                 
-                if type(data) == str:
+                if type(data) == str: #livesplit
+                    LOG.logger.debug(f"in queue from livesplit: {data}")
                     create_prediction(data)
-                else: #dict
+                else: #eventsub
                     e_status = data['status'] #.end resolved/canceled
-                    outcomes = data['outcomes'] #list
+                    outcomes = data['outcomes']
                     winning_id = data['winning_id']
 
                     if data['type'].endswith("begin"):
-                        send_data(f"PRIVMSG {CHANNEL} :🎰BETS ARE OPEN🎰")
+                        pred_is_active = True
+                        time_35s_before_lock = event_prediction_begin(data['locks_at'])
                     elif data['type'].endswith("lock"):
+                        pred_is_active = False
                         event_prediction_lock(outcomes)
                     elif data['type'].endswith("end"):
+                        pred_is_active = False
                         event_prediction_end(outcomes, e_status, winning_id)
                     
-            buffer = IRC.recv(1024).decode() #non-blocking
+            if pred_is_active:
+                current_utc = datetime.datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S")
+                if current_utc >= time_35s_before_lock:
+                    send_data(f"PRIVMSG {CHANNEL} :🚨30 seconds left VeryPog make your bets NOW🚨")
+                    pred_is_active = False
+                    
+            buffer = IRC.recv(1024).decode()
             buffer = buffer.replace(' \U000e0000', '') #happens when spamming?
-            msg = buffer.split()
+            msg = buffer.split() #[user, type_msg, channel, message]
 
             if not buffer: #empty = disconnect
                 IRC_reconnect()
@@ -238,40 +257,39 @@ def read_data(q):
 
             if msg[0] == "PING":
                 LOG.logger.info("Pinged")
-                send_data(f"PONG {msg[1]}")  #user #type_msg #CHANNEL #message
-
+                send_data(f"PONG {msg[1]}")
             elif msg[1] == "PRIVMSG": #TODO commands, modcommands, song, pb, wr
-                buffer_split = buffer.splitlines()
+                chat_interact(buffer.splitlines())
 
-                for i in buffer_split:
-                    username = i[i.find(':')+1:i.find('!')]
-                    chat_msg = i[i.find(':', 1)+1:]
-                    #print(f"{username}: {chat_msg}")
-
-                    if username in mods: #mod commands
-                        response = None
-                        match chat_msg.split():
-                            case ["pred", "start", name]:
-                                response = create_prediction(name)
-
-                            case ["pred", "lock"]: #LOCKED
-                                response = end_prediction("LOCK")
-                            
-                            case ["pred", "outcome", outcome] if 0 < int(outcome) <= 10:
-                                response = resolve_prediction(int(outcome))
-                                    
-                            case ["pred", "cancel"]: #CANCELED 
-                                response = end_prediction("CANCEL")
-
-                        if response != None: send_data(f"PRIVMSG {CHANNEL} :{response}")
-                      
-        except ssl.SSLWantReadError: #happens after timeout
+        except ssl.SSLWantReadError: #timeout
             continue             
         except Exception:
             LOG.logger.error("Exception in read_data", exc_info=True)
         
 
-def get_prediction():
+def chat_interact(buffer):
+    mods = get_mods() #easier than parsing with /tags
+    for i in buffer: #possibly multiple messages
+        username = i[i.find(':')+1:i.find('!')]
+        chat_msg = i[i.find(':', 1)+1:]
+        #print(f"{username}: {chat_msg}")
+
+        if username in mods: #mod commands
+            response = None
+            match chat_msg.split():
+                case ["pred", "start", name]:
+                    response = create_prediction(name)
+                case ["pred", "lock"]:
+                    response = end_prediction("LOCK")
+                case ["pred", "outcome", outcome] if 0 < int(outcome) <= 10:
+                    response = resolve_prediction(int(outcome))
+                case ["pred", "cancel"]: #CANCELED 
+                    response = end_prediction("CANCEL")
+
+            if response != None: send_data(f"PRIVMSG {CHANNEL} :{response}")
+
+
+def update_latest_prediction():
     global pred_json
 
     while True:
@@ -280,6 +298,7 @@ def get_prediction():
             "Client-Id": CLIENT_ID
         }
         response = requests.get(f'https://api.twitch.tv/helix/predictions?broadcaster_id={B_ID}&first=1', headers=headers)
+        LOG.logger.debug("update_latest_prediction: request done")
 
         match response.status_code:
             case 200:
@@ -292,7 +311,8 @@ def get_prediction():
 def create_prediction(pred_name):
     with open('predictions/predictions.json', 'r') as file:
         preds = json.load(file)
-
+    LOG.logger.debug("create_prediction: Read predictions.json")
+    
     not_found = True
     options = ""
     for i in preds['predictions']:
@@ -303,6 +323,7 @@ def create_prediction(pred_name):
             not_found = False
         
     if not_found:
+        LOG.logger.debug("create_prediction: Non-existing prediction")
         return f"Possibilities: {options}"
 
     while True:
@@ -314,9 +335,11 @@ def create_prediction(pred_name):
         response = requests.post('https://api.twitch.tv/helix/predictions', json=data, headers=headers)
 
         match response.status_code:
-            case 200:   
+            case 200:
+                LOG.logger.debug("create_prediction: successfully created prediction")
                 break
             case 400: #pred already running
+                LOG.logger.error(response.text)
                 return "Prediction already running"
             case 401: #expired
                 validate_token('broad')
@@ -326,9 +349,10 @@ def create_prediction(pred_name):
 
 
 def resolve_prediction(outcome):
-    get_prediction() #update global pred_json
-
-    if pred_json['data'][0]['status'] not in ("ACTIVE", "LOCKED"): #ACTIVE, RESOLVED, CANCELED, LOCKED
+    update_latest_prediction()
+    
+    #ACTIVE, RESOLVED, CANCELED, LOCKED
+    if pred_json['data'][0]['status'] not in ("ACTIVE", "LOCKED"): 
         return "No active predictions"
 
     if not outcome <= len(pred_json['data'][0]['outcomes']):
@@ -351,6 +375,7 @@ def resolve_prediction(outcome):
 
         match response.status_code:
             case 200:
+                LOG.logger.debug("resolve_prediction: successfully resolved prediction")
                 break
             case 400:
                 LOG.logger.error("resolve_prediction: 400 Bad Request")
@@ -362,10 +387,10 @@ def resolve_prediction(outcome):
                 break
 
 
-def end_prediction(action): #LOCK or CANCEL
-    get_prediction()
-    status = pred_json['data'][0]['status'] #ACTIVE, RESOLVED, CANCELED, LOCKED
+def end_prediction(action):
+    update_latest_prediction()
 
+    status = pred_json['data'][0]['status'] 
     match action:
         case "LOCK":
             if status != "ACTIVE":
@@ -379,7 +404,7 @@ def end_prediction(action): #LOCK or CANCEL
     data = {
         "broadcaster_id": B_ID,
         "id": pred_json['data'][0]['id'],
-        "status": f"{action}ED"
+        "status": f"{action}ED" #LOCK or CANCEL
     }
 
     while True:
@@ -409,14 +434,13 @@ async def event_handler(q):
     
     while True:
         try:
-            async with websockets.connect((event_host)) as websocket:
+            async with websockets.connect((event_host)) as eventsub:
                 while True:
-                    buffer = await asyncio.wait_for(websocket.recv(), 15) #no keepalive = conn died
+                    buffer = await asyncio.wait_for(eventsub.recv(), 15) #no keepalive = conn died
                     buffer = json.loads(buffer) #dict
 
                     match buffer['metadata']['message_type']:
                         case 'session_welcome': #first msg after connecting
-                            session_id = buffer['payload']['session']['id']
                             LOG.logger.info("Eventsub: welcome")
                             with open(f'tokens/token_broad.json') as token_file:
                                 token = json.load(token_file)
@@ -424,12 +448,13 @@ async def event_handler(q):
                                 
                             event_list = ["channel.prediction.begin", "channel.prediction.lock", "channel.prediction.end"]
                             for event in event_list:
-                                sub_to_event(q, session_id, event)
-                            LOG.logger.info("Listening for predictions...")
+                                sub_to_event(q, buffer['payload']['session']['id'], event)
+
+                            LOG.logger.info("Listening for events...")
                         case 'session_keepalive': continue #every 10s
                         case 'notification':
                             LOG.logger.info("Eventsub: notification")
-                            queue_object(q, buffer)
+                            queue_event_object(q, buffer)
                         case 'session_reconnect':
                             LOG.logger.warning("Eventsub: reconnect")
                             event_host = buffer['payload']['session']['reconnect_url']
@@ -440,7 +465,7 @@ async def event_handler(q):
                             LOG.logger.error(f'Revoked: {event_type} reason: {reason}')
                             break
                         case _:
-                            LOG.logger.error("Unknown message")
+                            LOG.logger.error(f"Unknown message: {buffer['metadata']['message_type']}")
                             exit()
         except TimeoutError: #no keepalive
             LOG.logger.warning("Connection lost, reconnecting...", exc_info=True)
@@ -453,22 +478,26 @@ async def event_handler(q):
             continue
 
 
-
-def queue_object(q, buffer): #parsing data to write to chat
+def queue_event_object(q, buffer): #parsing data to write to chat
     event_type = buffer['payload']['subscription']['type']
-    e_status = "xdd"
-    winning_id = "xdd"
     outcomes = buffer['payload']['event']['outcomes']
+    e_status = ""
+    winning_id = ""
+    locks_at = ""
 
     if event_type.endswith("end"):
         e_status = buffer['payload']['event']['status']
         winning_id = buffer['payload']['event']['winning_outcome_id']
+
+    elif event_type.endswith("begin"):
+        locks_at = buffer['payload']['event']['locks_at']
     
     data = {
         "type": event_type,
         "status": e_status,
         "outcomes": outcomes,
-        "winning_id": winning_id
+        "winning_id": winning_id,
+        "locks_at": locks_at
     }
     q.put(data)
 
@@ -496,11 +525,11 @@ def sub_to_event(q, session_id, event_type):
                 "session_id": session_id
             }
         }
-
         response = requests.post('https://api.twitch.tv/helix/eventsub/subscriptions', headers=headers, json=data)
+
         match response.status_code:
             case 202:
-                LOG.logger.debug("Eventsub: Subbed to event")
+                LOG.logger.info("Eventsub: Subbed to event")
                 break
             case 400:
                 LOG.logger.error(f"Eventsub: Bad request: {response.text}")
@@ -516,7 +545,7 @@ def sub_to_event(q, session_id, event_type):
                 break
 
 
-def waiting_process():
+def hourly_validation():
     try:
         while True:
             time.sleep(3600) #validate every hour
@@ -526,9 +555,10 @@ def waiting_process():
             http_code = validate_token('bot')
             http_code2 = validate_token('broad')
 
-            if http_code == 200 and http_code2 == 200: 
+            if http_code == 200 and http_code2 == 200:
+                LOG.logger.debug("Hourly check done")
                 continue
-            elif http_code == 401 or http_code2 == 401: 
+            elif http_code == 401 or http_code2 == 401:
                 LOG.logger.warning("Reconnecting...")
                 old_process.terminate()
                 old_event_process.terminate()
@@ -537,18 +567,15 @@ def waiting_process():
                 new_process = mp.Process(target=run, daemon=True, args=(q,))
                 new_process.start()
 
-                time.sleep(3)
-                event_process = mp.Process(target=event_sub, daemon=True, args=(q,))
+                time.sleep(4)
+                event_process = mp.Process(target=eventsub, daemon=True, args=(q,))
                 event_process.start()
 
                 prediction_process = mp.Process(target=auto_predictions, daemon=True, args=(q,CFG))
                 prediction_process.start()
             else:
                 LOG.logger.error(f"Unknown error: code {http_code} / {http_code2}")
-                old_process.terminate()
-                old_event_process.terminate()
-                break
-
+                break #kill self and children
     except IndexError:
         LOG.logger.error("Child process dead")
     except KeyboardInterrupt:
@@ -566,12 +593,11 @@ def run(q):
     read_data(q)
 
 
-def event_sub(q):
+def eventsub(q):
     asyncio.run(event_handler(q))
 
 
 def auto_predictions(q, CFG):
-    predictions.get_self_starting_predictions()
     predictions.main(q, CFG, LOG)
 
 
@@ -581,11 +607,11 @@ if __name__ == "__main__":
     process = mp.Process(target=run, daemon=True, args=(q,)) #kill child if parent dies
     process.start() #child
 
-    time.sleep(3)
-    event_process = mp.Process(target=event_sub, daemon=True, args=(q,))
+    time.sleep(4)
+    event_process = mp.Process(target=eventsub, daemon=True, args=(q,))
     event_process.start()
 
     prediction_process = mp.Process(target=auto_predictions, daemon=True, args=(q,CFG))
     prediction_process.start()
 
-    waiting_process()
+    hourly_validation()

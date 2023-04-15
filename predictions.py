@@ -7,6 +7,7 @@ import json
 def main(q, CFG, LOG):
     global auto_predictions
 
+    get_self_starting_predictions()
     try:
         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
             sock.connect((CFG['livesplit']['HOST'], CFG['livesplit']['PORT']))
@@ -15,7 +16,7 @@ def main(q, CFG, LOG):
 
             while True:
                 try:
-                    sleep(1)
+                    sleep(1.5)
                     sock.send(b"getcurrentsplitname\r\n")
                     split_name = sock.recv(1024).decode().rstrip() #remove \r\n
                     
@@ -28,11 +29,10 @@ def main(q, CFG, LOG):
                         if pred['split_name'].lower() == split_name.lower():
                             q.put(pred['name']) #send to other process
                             auto_predictions.remove(pred)
-                            LOG.logger.debug(f"Auto started at {split_name}")
+                            LOG.logger.info(f"Auto started at {split_name}")
                             
                     #do things based on name and/or time
-
-                except TimeoutError: #run reset, add predictions again
+                except TimeoutError: #inactive timer
                     get_self_starting_predictions()
                     continue
     except ConnectionRefusedError:
