@@ -287,6 +287,9 @@ def chat_interact(buffer):
                     response = end_prediction("CANCEL")
 
             if response != None: send_data(f"PRIVMSG {CHANNEL} :{response}")
+        
+        if chat_msg == "!modcommands":
+            send_data(f"PRIVMSG {CHANNEL} :pred start <name>, pred lock, pred outcome <1-10>, pred cancel")
 
 
 def update_latest_prediction():
