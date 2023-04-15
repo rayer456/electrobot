@@ -121,6 +121,7 @@ The broadcaster and moderators can use these commands.
 - Lock predictions with `pred lock` or wait until the timer runs out
 - Resolve predictions with `pred outcome <1-10>`
 - Cancel predictions with `pred cancel`
+- `!modcommands` shows this above list
 
 **Examples:**
 - ![](/assets/pred_start.png)
