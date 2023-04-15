@@ -109,19 +109,23 @@ The default port on which Livesplit Server runs is 16834, if you use a different
 
 Run `electrobot.py`
 
+If all was configured correctly you should see this:
+
+- ![](/assets/example.png)
+
 **Chat commands:**
 
 The broadcaster and moderators can use these commands.
 - Start predictions with `pred start <name>`
     - `name` must correspond to the `name` field of a prediction in `predictions.json`
-    - ![](/assets/pred_start.png)
 - Lock predictions with `pred lock` or wait until the timer runs out
-    - ![](/assets/pred_lock.png)
 - Resolve predictions with `pred outcome <1-10>`
-    - ![](/assets/pred_outcome.png)
 - Cancel predictions with `pred cancel`
-    - ![](/assets/pred_cancel.png)
 
-**Self-starting predictions:**
+**Examples:**
+- ![](/assets/pred_start.png)
+- ![](/assets/pred_lock.png)
+- ![](/assets/pred_outcome.png)
+- ![](/assets/pred_cancel.png)
 
-![](/assets/livesplit.gif)
+- ![](/assets/livesplit.gif)
