@@ -125,6 +125,7 @@ The broadcaster and moderators can use these commands.
 
 **Examples:**
 - ![](/assets/pred_start.png)
+- ![](/assets/30sreminder.png)
 - ![](/assets/pred_lock.png)
 - ![](/assets/pred_outcome.png)
 - ![](/assets/pred_cancel.png)
