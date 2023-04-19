@@ -101,7 +101,7 @@ def handle_delete():
     for existing_pred in dict['predictions']:
         if existing_pred['name'] == delete_name:
             dict['predictions'].pop(dict['predictions'].index(existing_pred))
-            lbl_error.config(text="Deleted prediction", fg="red")
+            lbl_error.config(text="Deleted prediction, changes saved", fg="red")
 
     with open('predictions/predictions.json', 'w') as file:
         file.write(json.dumps(dict))
