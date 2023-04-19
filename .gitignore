@@ -3,6 +3,5 @@ __pycache__
 config/config.toml
 tokens/
 logs/
-predictions/predictions.json
 test.py
 test2.py

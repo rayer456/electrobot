@@ -2,24 +2,18 @@ import tkinter as tk
 import json
 
 
+
 with open('predictions/predictions.json', 'r') as file:
     dict = json.load(file)
 
 
-#TODO delete current, update listbox when saving and deleting
-# side note: by changing the Name field you create a new prediction, if you only want to change the Name field don't forget to delete the old prediction with the old name
-
-
 def handle_select_pred(event):
-    selected_pred = lb_list.curselection()
-    selected_pred_name = lb_list.get(selected_pred)
-
+    selected_pred_name = lb_list.get(lb_list.curselection())
     ent_name.delete(0, tk.END)
-
     ent_splitname.delete(0, tk.END)
     auto_start.set(0)
-
     ent_title.delete(0, tk.END)
+
     for outcome in outcomes:
         outcome.delete(0, tk.END)
 
@@ -37,18 +31,21 @@ def handle_select_pred(event):
 
             if file_auto_start:
                 auto_start.set(1)
-            ent_splitname.insert(0, file_splitname)
 
+            ent_splitname.insert(0, file_splitname)
             ent_title.insert(0, file_title)
+
             for i, file_outcome in enumerate(file_outcomes):
                 outcomes[i].insert(0, file_outcome['title'])
 
             ent_window.insert(0, file_window)
-            
+            lbl_error.config(text="")
             break
 
 
 def handle_save():
+    global dict
+
     outcome_list = validate_form()
     if outcome_list == 1: #not valid form
         return 0
@@ -70,22 +67,46 @@ def handle_save():
     for outcome in outcome_list:
         new_pred_obj['data']['outcomes'].append(outcome)
 
+
     #check if exists
     for existing_pred in dict['predictions']:
         #modifying existing pred
         if existing_pred['name'] == new_pred_obj['name']:
             #remove existing
             dict['predictions'].pop(dict['predictions'].index(existing_pred))
+            break
 
     #append new or modified pred
     dict['predictions'].append(new_pred_obj)
 
+
     with open('predictions/predictions.json', 'w') as file:
         file.write(json.dumps(dict))
     
+    refresh_list()
     lbl_error.config(text="Saved changes", fg="green")
 
+
+def refresh_list():
+    #erase, write
+    lb_list.delete(0, tk.END) 
+
+    for i, pred in enumerate(dict['predictions']):
+        lb_list.insert(i, pred['name'])
+
     
+def handle_delete():
+    delete_name = ent_name.get()
+
+    for existing_pred in dict['predictions']:
+        if existing_pred['name'] == delete_name:
+            dict['predictions'].pop(dict['predictions'].index(existing_pred))
+            lbl_error.config(text="Deleted prediction", fg="red")
+
+    with open('predictions/predictions.json', 'w') as file:
+        file.write(json.dumps(dict))
+    
+    refresh_list()
 
 
 def validate_form():
@@ -122,13 +143,11 @@ def validate_form():
     except ValueError:
             lbl_error.config(text="Window must be a number between 30 and 1800 seconds")
             return 1
-    
 
 
 root = tk.Tk()
 root.title("Predictions manager")
-root.geometry(newGeometry='700x550')
-root.columnconfigure(2)
+root.geometry(newGeometry='600x500')
 
 
 frm_list = tk.Frame(master=root)
@@ -198,19 +217,21 @@ ent_window.grid(column=1, row=14, pady=(2,1))
 frm_buttons = tk.Frame(master=root)
 frm_buttons.grid(column=1, row=1)
 
-btn_save = tk.Button(master=frm_buttons, text="Save", padx=20, pady=10, command=handle_save)
+btn_save = tk.Button(master=frm_buttons, text="SAVE", cursor='hand2', padx=20, pady=10, command=handle_save)
 btn_save.grid(column=0, row=0, padx=(15,15))
 
-btn_delete = tk.Button(master=frm_buttons, text="Delete", padx=20, pady=10)
+btn_delete = tk.Button(master=frm_buttons, text="DELETE", cursor='hand2', padx=20, pady=10, command=handle_delete)
 btn_delete.grid(column=1, row=0, padx=(15,15))
 
 
 lbl_error = tk.Label(master=root, text="", foreground="red", font=('Arial', 12))
 lbl_error.grid(column=1, row=2, pady=(25,0))
 
+lb_list.select_set(0)
+lb_list.event_generate('<<ListboxSelect>>')
 
 
-
+documentation = "to create a new prediction: change the Name field and save to edit an existing prediction: change anything but the Name field and save to edit the Name of an existing prediction: create a new one and delete the old one"
 
 
 root.mainloop()
