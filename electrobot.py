@@ -56,7 +56,7 @@ def validate_token(br, q=None):
             LOG.logger.info("Removing bad file")
             LOG.logger.info("Run authorize.py")
             os.remove(f'tokens/token_{br}.json')
-            exit() #parent will die on hourly check, if not by user
+            exit()
         except FileNotFoundError:
             if br == 'bot':
                 LOG.logger.error("No bot token, run authorize.py")
@@ -127,6 +127,7 @@ def IRC_reconnect():
     if attempts == 7:
         LOG.logger.critical("Couldn't connect to the server, closing...")
         exit()
+
     IRC_connect()
 
 
@@ -214,9 +215,13 @@ def event_prediction_end(outcomes, e_status, winning_id):
         send_data(f"PRIVMSG {CHANNEL} :Prediction canceled SadgeCry")
 
 
-def read_data(q):
-    pred_is_active = False
+def read_data():
+    global delay, attempts
+
+    validate_utc = datetime.datetime.utcnow() + datetime.timedelta(seconds=3600)
     mods = get_mods()
+    pred_is_active = False
+
     while True: 
         try: 
             select.select([IRC], [], [], 4)
@@ -241,10 +246,14 @@ def read_data(q):
                     elif data['type'].endswith("end"):
                         pred_is_active = False
                         event_prediction_end(outcomes, e_status, winning_id)
-                    
+            
+            current_utc = datetime.datetime.utcnow()
+            if current_utc >= validate_utc:
+                hourly_validation()
+                validate_utc = current_utc + datetime.timedelta(seconds=3600)
+
             if pred_is_active:
-                current_utc = datetime.datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S")
-                if current_utc >= time_35s_before_lock:
+                if current_utc.strftime("%Y-%m-%d %H:%M:%S") >= time_35s_before_lock:
                     send_data(f"PRIVMSG {CHANNEL} :🚨30 seconds left VeryPog make your bets NOW🚨")
                     pred_is_active = False
                     
@@ -255,13 +264,15 @@ def read_data(q):
             if not buffer: #empty = disconnect
                 IRC_reconnect()
                 continue
+            
+            attempts = 1
+            delay = 1
 
             if msg[0] == "PING":
                 LOG.logger.info("Pinged")
                 send_data(f"PONG {msg[1]}")
             elif msg[1] == "PRIVMSG": #TODO commands, modcommands, song, pb, wr
                 chat_interact(buffer.splitlines(), mods)
-
         except ssl.SSLWantReadError: #timeout
             continue             
         except Exception:
@@ -274,7 +285,7 @@ def chat_interact(buffer, mods):
         chat_msg = i[i.find(':', 1)+1:]
         #print(f"{username}: {chat_msg}")
 
-        if username in mods: #mod commands
+        if username in mods:
             response = None
             match chat_msg.split():
                 case ["pred", "start", name]:
@@ -471,9 +482,11 @@ async def event_handler(q):
                             exit()
         except TimeoutError: #no keepalive
             LOG.logger.warning("Connection lost, reconnecting...", exc_info=True)
+            event_host = CFG['eventsub']['HOST']
             continue
         except websockets.exceptions.ConnectionClosedError:
             LOG.logger.error("Eventsub: Connection closed", exc_info=True)
+            event_host = CFG['eventsub']['HOST']
             continue
         except Exception:
             LOG.logger.error("Websockets error", exc_info=True)
@@ -548,51 +561,18 @@ def sub_to_event(q, session_id, event_type):
 
 
 def hourly_validation():
-    try:
-        while True:
-            time.sleep(3600) #validate every hour
-            old_process = mp.active_children()[0] #indexError = no child
-            old_event_process = mp.active_children()[1]
-            old_prediction_process = mp.active_children()[2]
-            http_code = validate_token('bot')
-            http_code2 = validate_token('broad')
+    http_code = validate_token('bot')
+    http_code2 = validate_token('broad')
 
-            if http_code == 200 and http_code2 == 200:
-                LOG.logger.debug("Hourly check done")
-                continue
-            elif http_code == 401 or http_code2 == 401:
-                LOG.logger.warning("Reconnecting...")
-                old_process.terminate()
-                old_event_process.terminate()
-                old_prediction_process.terminate()
-        
-                new_process = mp.Process(target=run, daemon=True, args=(q,))
-                new_process.start()
-
-                time.sleep(4)
-                event_process = mp.Process(target=eventsub, daemon=True, args=(q,))
-                event_process.start()
-
-                prediction_process = mp.Process(target=auto_predictions, daemon=True, args=(q,CFG))
-                prediction_process.start()
-            else:
-                LOG.logger.error(f"Unknown error: code {http_code} / {http_code2}")
-                break #kill self and children
-    except IndexError:
-        LOG.logger.error("Child process dead")
-    except KeyboardInterrupt:
-        LOG.logger.info("Closing bot...")
-        exit()
-
-
-def run(q):
-    global delay, attempts
-    delay = 1
-    attempts = 1
-    validate_token('bot')
-    validate_token('broad')
-    IRC_connect()
-    read_data(q)
+    if http_code == 200 and http_code2 == 200:
+        LOG.logger.debug("Hourly check done")
+    elif http_code == 401:
+        LOG.logger.info("Reconnecting...")
+        IRC_reconnect()
+    elif http_code2 == 401:
+        pass
+    else:
+        LOG.logger.error(f"hourly_validation: code {http_code} / {http_code2}")
 
 
 def eventsub(q):
@@ -604,16 +584,20 @@ def auto_predictions(q, CFG):
 
 
 if __name__ == "__main__":
+    global delay, attempts
+
+    delay = 1
+    attempts = 1
     q = mp.Queue()
+    
+    validate_token('bot')
+    validate_token('broad')
+    IRC_connect()
 
-    process = mp.Process(target=run, daemon=True, args=(q,)) #kill child if parent dies
-    process.start() #child
-
-    time.sleep(4)
     event_process = mp.Process(target=eventsub, daemon=True, args=(q,))
     event_process.start()
 
     prediction_process = mp.Process(target=auto_predictions, daemon=True, args=(q,CFG))
     prediction_process.start()
 
-    hourly_validation()
+    read_data()

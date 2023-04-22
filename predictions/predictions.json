@@ -1,5 +1,27 @@
 {
     "predictions": [
-        
+        {
+            "auto_predict": {
+                "auto_start": false,
+                "split_name": ""
+            },
+            "data": {
+                "broadcaster_id": "",
+                "outcomes": [
+                    {
+                        "title": "Yes"
+                    },
+                    {
+                        "title": "No"
+                    },
+                    {
+                        "title": "Maybe"
+                    }
+                ],
+                "prediction_window": 600,
+                "title": "Is this an example?"
+            },
+            "name": "example"
+        }
     ]
 }

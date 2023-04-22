@@ -8,7 +8,6 @@ def main(q, CFG, LOG):
     global auto_predictions
 
     get_self_starting_predictions()
-    first_try = True
     try:
         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
             sock.connect((CFG['livesplit']['HOST'], CFG['livesplit']['PORT']))
@@ -37,11 +36,8 @@ def main(q, CFG, LOG):
                     get_self_starting_predictions()
                     continue
     except ConnectionRefusedError:
-        if first_try:
-            LOG.logger.warning("Predictions will not start automatically by split")
-            LOG.logger.warning("Start Livesplit Server and restart the bot")
-            first_try = False
-        sleep(15)
+        LOG.logger.warning("Predictions will not start automatically by split")
+        LOG.logger.warning("Start Livesplit Server and restart the bot")
 
 
 def get_self_starting_predictions():
