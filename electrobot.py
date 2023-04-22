@@ -211,14 +211,15 @@ def event_prediction_end(outcomes, e_status, winning_id):
             send_data(f"PRIVMSG {CHANNEL} :{loser_string}")
         
     else: #canceled
-        send_data(f"PRIVMSG {CHANNEL} :Prediction canceled SadgeCry") #balls
+        send_data(f"PRIVMSG {CHANNEL} :Prediction canceled SadgeCry")
 
 
 def read_data(q):
     pred_is_active = False
+    mods = get_mods()
     while True: 
         try: 
-            select.select([IRC], [], [], 4) #block until timeout, unless irc msg
+            select.select([IRC], [], [], 4)
             
             if q.qsize() != 0: #from livesplit or eventsub
                 data = q.get() #collision?
@@ -259,7 +260,7 @@ def read_data(q):
                 LOG.logger.info("Pinged")
                 send_data(f"PONG {msg[1]}")
             elif msg[1] == "PRIVMSG": #TODO commands, modcommands, song, pb, wr
-                chat_interact(buffer.splitlines())
+                chat_interact(buffer.splitlines(), mods)
 
         except ssl.SSLWantReadError: #timeout
             continue             
@@ -267,8 +268,7 @@ def read_data(q):
             LOG.logger.error("Exception in read_data", exc_info=True)
         
 
-def chat_interact(buffer):
-    mods = get_mods() #easier than parsing with /tags
+def chat_interact(buffer, mods):
     for i in buffer: #possibly multiple messages
         username = i[i.find(':')+1:i.find('!')]
         chat_msg = i[i.find(':', 1)+1:]
