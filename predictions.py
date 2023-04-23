@@ -48,7 +48,7 @@ def get_self_starting_predictions():
 
     auto_predictions = [] #auto start based on current split
     for p in data['predictions']:
-        if p['auto_predict']['auto_start'] == True:
+        if p['auto_predict']['auto_start']:
             auto_pred = {
                 "name": p['name'],
                 "split_name": p['auto_predict']['split_name']

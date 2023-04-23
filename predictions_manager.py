@@ -1,10 +1,22 @@
 import tkinter as tk
 import json
+import os
 
 
+if not os.path.exists('predictions'):
+    os.makedirs('predictions')
 
-with open('predictions/predictions.json', 'r') as file:
-    dict = json.load(file)
+while 1:
+    try:
+        with open('predictions/predictions.json', 'r') as file:
+            dict = json.load(file)
+            break
+    except FileNotFoundError:
+        default_content = {
+            "predictions": []
+        }
+        with open('predictions/predictions.json', 'w') as file:
+            file.write(json.dumps(default_content))
 
 
 def handle_select_pred(event):
@@ -87,14 +99,6 @@ def handle_save():
     lbl_error.config(text="Saved changes", fg="green")
 
 
-def refresh_list():
-    #erase, write
-    lb_list.delete(0, tk.END) 
-
-    for i, pred in enumerate(dict['predictions']):
-        lb_list.insert(i, pred['name'])
-
-    
 def handle_delete():
     delete_name = ent_name.get()
 
@@ -107,6 +111,14 @@ def handle_delete():
         file.write(json.dumps(dict))
     
     refresh_list()
+
+
+def refresh_list():
+    #erase, write
+    lb_list.delete(0, tk.END) 
+
+    for i, pred in enumerate(dict['predictions']):
+        lb_list.insert(i, pred['name'])
 
 
 def validate_form():

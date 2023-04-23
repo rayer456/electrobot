@@ -274,7 +274,10 @@ def read_data():
             elif msg[1] == "PRIVMSG": #TODO commands, modcommands, song, pb, wr
                 chat_interact(buffer.splitlines(), mods)
         except ssl.SSLWantReadError: #timeout
-            continue             
+            continue
+        except KeyboardInterrupt:
+            LOG.logger.info("Closing bot...")
+            break
         except Exception:
             LOG.logger.error("Exception in read_data", exc_info=True)
         

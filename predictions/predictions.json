@@ -2,26 +2,23 @@
     "predictions": [
         {
             "auto_predict": {
-                "auto_start": false,
-                "split_name": ""
+                "auto_start": true,
+                "split_name": "repo"
             },
             "data": {
                 "broadcaster_id": "",
                 "outcomes": [
                     {
-                        "title": "Yes"
+                        "title": "yes"
                     },
                     {
-                        "title": "No"
-                    },
-                    {
-                        "title": "Maybe"
+                        "title": "no"
                     }
                 ],
                 "prediction_window": 600,
-                "title": "Is this an example?"
+                "title": "is something?"
             },
-            "name": "example"
+            "name": "repo"
         }
     ]
 }
