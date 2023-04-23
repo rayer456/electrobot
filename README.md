@@ -47,43 +47,21 @@ Open the `config` folder.
 6. Finally change the value of `BOT_ACCOUNT` to the Twitch channel of your bot.
 7. Save
 
-## Predictions.json
+## Managing predictions
 
-Open the `predictions` folder, make a copy of `predictions-example.json` and rename this copy to `predictions.json`, then open the file.
+Run `predictions_manager.pyw`
 
-This is where you manage a list of "pre-made" predictions that the bot can start either by Livesplit or chat command. You can create as many predictions as you want.
+In this simple GUI you can manage a list of "pre-made" predictions that the bot can start either by Livesplit (tick Auto start) or chat command.
 
-- In the `name` field you choose the name of the prediction. This is how you call the prediction from chat. **NOTE**: This must be a string without spaces. So instead of calling it `level one` call it `level_one`.
-    ```json
-    "name": "bike"
-    ```
-- Set `auto_start` to `true` if you want the prediction to start automatically based on Livesplit. If not, set to `false`. If you set `auto_start` to `true`, you must fill in `split_name` with a split name in Livesplit. When this split starts, a prediction will start, unless a prediction is still active. 
+<img src="assets/predictions_manager.png" alt="predictions manager" title="predictions manager" height=420 width=460>
 
-- **Note:** If you use subsplits don't forget the - before the actual split name
-    ```json
-    "auto_predict": {
-                    "auto_start": true,
-                    "split_name": "complications"
-                    }
-    ```
-- In `data` set `title` to your prediction title. This is what your viewers will see when a prediction starts. Maximum of 45 characters.
-    ```json
-    "title": "Parked bike?"
-    ```
-- In `outcomes` you can add a maximum of 10 different outcomes with a minimum of 2. Each of them requires a `title`. Maximum of 25 characters.
-    ```json
-    {
-        "title": "yes"
-    },
-    {
-        "title": "no"
-    }
-    ```
-- In `prediction_window` you set the time in seconds that the prediction will run for with a minimum of 30 and maximum of 1800 (30 minutes).
-    ```json
-    "prediction_window": 600
-    ``` 
-- Make sure the JSON data is valid by using an online tool like https://jsonformatter.org/ or https://jsonlint.com/
+**To add a prediction:** change the Name field and other fields, save 
+
+**To edit an existing prediction:** change anything but the Name field and save
+ 
+**To edit the name of an existing prediction:** create a new one and delete the old one
+
+**To delete a prediction:** select the prediction you want deleted and click delete
 
 # Usage
 
@@ -101,7 +79,7 @@ You can make predictions start automatically based on Livesplit splits by using 
 
 Make sure to start Livesplit Server **before** you start the bot.
 
-If you've configured `predictions.json` correctly a prediction should start when the given split name starts. 
+If you added predictions with `predictions_manager.pyw` a prediction should start when the given split name starts. 
 
 The default port on which Livesplit Server runs is 16834, if you use a different port, you must also change the port in `config.toml` under `[livesplit]`.
 
