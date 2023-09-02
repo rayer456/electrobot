@@ -80,15 +80,15 @@ QLineEdit {
 }
 
 #setActiveButton {
-	background-color: blue;
+	background-color: #1e255d;
 	color: white;
 	width: 100px;
 	border-radius: 12px
 }
 
 #setActiveButton:hover {
+	background-color: #080a5d;
 	color: white;
-	font-weight: bold;
 }</string>
    </property>
    <layout class="QGridLayout" name="gridLayout">
@@ -292,7 +292,7 @@ QListWidget:item:hover {
         <item>
          <widget class="QListWidget" name="splitList">
           <property name="sizePolicy">
-           <sizepolicy hsizetype="Fixed" vsizetype="Maximum">
+           <sizepolicy hsizetype="Fixed" vsizetype="Expanding">
             <horstretch>0</horstretch>
             <verstretch>0</verstretch>
            </sizepolicy>
@@ -306,7 +306,7 @@ QListWidget:item:hover {
           <property name="maximumSize">
            <size>
             <width>200</width>
-            <height>600</height>
+            <height>166666</height>
            </size>
           </property>
           <property name="font">
@@ -337,7 +337,6 @@ QListWidget::item:selected {
 QListWidget::item:hover {
 	color: white;
 	background-color: rgb(71, 29, 93);
-	cursor: pointer;
 }</string>
           </property>
           <property name="sizeAdjustPolicy">
@@ -365,187 +364,12 @@ QListWidget::item:hover {
           </item>
           <item>
            <property name="text">
-            <string>New Item</string>
-           </property>
-          </item>
-          <item>
-           <property name="text">
-            <string>New Item</string>
-           </property>
-          </item>
-          <item>
-           <property name="text">
-            <string>New Item</string>
-           </property>
-          </item>
-          <item>
-           <property name="text">
-            <string>New Item</string>
-           </property>
-          </item>
-          <item>
-           <property name="text">
-            <string>New Item</string>
-           </property>
-          </item>
-          <item>
-           <property name="text">
-            <string>New Item</string>
-           </property>
-          </item>
-          <item>
-           <property name="text">
-            <string>New Item</string>
-           </property>
-          </item>
-          <item>
-           <property name="text">
-            <string>New Item</string>
-           </property>
-          </item>
-          <item>
-           <property name="text">
-            <string>New Item</string>
-           </property>
-          </item>
-          <item>
-           <property name="text">
-            <string>New Item</string>
-           </property>
-          </item>
-          <item>
-           <property name="text">
-            <string>New Item</string>
-           </property>
-          </item>
-          <item>
-           <property name="text">
-            <string>New Item</string>
-           </property>
-          </item>
-          <item>
-           <property name="text">
-            <string>New Item</string>
-           </property>
-          </item>
-          <item>
-           <property name="text">
-            <string>New Item</string>
-           </property>
-          </item>
-          <item>
-           <property name="text">
-            <string>New Item</string>
-           </property>
-          </item>
-          <item>
-           <property name="text">
-            <string>New Item</string>
-           </property>
-          </item>
-          <item>
-           <property name="text">
-            <string>New Item</string>
-           </property>
-          </item>
-          <item>
-           <property name="text">
-            <string>New Item</string>
-           </property>
-          </item>
-          <item>
-           <property name="text">
-            <string>New Item</string>
-           </property>
-          </item>
-          <item>
-           <property name="text">
             <string>Franklin/Lamar</string>
            </property>
           </item>
           <item>
            <property name="text">
             <string>Repo</string>
-           </property>
-          </item>
-          <item>
-           <property name="text">
-            <string>fsadf</string>
-           </property>
-          </item>
-          <item>
-           <property name="text">
-            <string>New Item</string>
-           </property>
-          </item>
-          <item>
-           <property name="text">
-            <string>New Item</string>
-           </property>
-          </item>
-          <item>
-           <property name="text">
-            <string>New Item</string>
-           </property>
-          </item>
-          <item>
-           <property name="text">
-            <string>New Item</string>
-           </property>
-          </item>
-          <item>
-           <property name="text">
-            <string>New Item</string>
-           </property>
-          </item>
-          <item>
-           <property name="text">
-            <string>New Item</string>
-           </property>
-          </item>
-          <item>
-           <property name="text">
-            <string>New Item</string>
-           </property>
-          </item>
-          <item>
-           <property name="text">
-            <string>New Item</string>
-           </property>
-          </item>
-          <item>
-           <property name="text">
-            <string>New Item</string>
-           </property>
-          </item>
-          <item>
-           <property name="text">
-            <string>New Item</string>
-           </property>
-          </item>
-          <item>
-           <property name="text">
-            <string>New Item</string>
-           </property>
-          </item>
-          <item>
-           <property name="text">
-            <string>New Item</string>
-           </property>
-          </item>
-          <item>
-           <property name="text">
-            <string>New Item</string>
-           </property>
-          </item>
-          <item>
-           <property name="text">
-            <string>New Item</string>
-           </property>
-          </item>
-          <item>
-           <property name="text">
-            <string>New Item</string>
            </property>
           </item>
          </widget>
@@ -575,7 +399,7 @@ QListWidget::item:hover {
           </property>
           <property name="styleSheet">
            <string notr="true">QLabel {
-	color: blue;
+	color: #080a5d;
 }</string>
           </property>
           <property name="text">
@@ -609,6 +433,7 @@ QListWidget::item:hover {
           <property name="font">
            <font>
             <pointsize>12</pointsize>
+            <bold>true</bold>
            </font>
           </property>
           <property name="cursor">
