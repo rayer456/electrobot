@@ -6,14 +6,44 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1077</width>
-    <height>633</height>
+    <width>900</width>
+    <height>650</height>
    </rect>
+  </property>
+  <property name="sizePolicy">
+   <sizepolicy hsizetype="Maximum" vsizetype="Fixed">
+    <horstretch>0</horstretch>
+    <verstretch>0</verstretch>
+   </sizepolicy>
+  </property>
+  <property name="minimumSize">
+   <size>
+    <width>700</width>
+    <height>0</height>
+   </size>
+  </property>
+  <property name="maximumSize">
+   <size>
+    <width>1100</width>
+    <height>700</height>
+   </size>
+  </property>
+  <property name="baseSize">
+   <size>
+    <width>0</width>
+    <height>0</height>
+   </size>
   </property>
   <property name="windowTitle">
    <string>MainWindow</string>
   </property>
   <widget class="QWidget" name="centralwidget">
+   <property name="sizePolicy">
+    <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+     <horstretch>0</horstretch>
+     <verstretch>0</verstretch>
+    </sizepolicy>
+   </property>
    <property name="styleSheet">
     <string notr="true">QWidget {
 	background-color: grey;
@@ -23,22 +53,61 @@ QLineEdit {
 	background-color: white;
 	width: 100px;
 	border-radius: 5px
+}
+
+#saveButton {
+	background-color: green;
+	color: white;
+	width: 100px;
+	border-radius: 12px
+}
+
+#deleteButton {
+	background-color: red;
+	color: white;
+	width: 100px;
+	border-radius: 12px
+}
+
+#saveButton:hover {
+	color: white;
+	font-weight: bold;
+}
+
+#deleteButton:hover {
+	color: white;
+	font-weight: bold;
+}
+
+#setActiveButton {
+	background-color: #1e255d;
+	color: white;
+	width: 100px;
+	border-radius: 12px
+}
+
+#setActiveButton:hover {
+	background-color: #080a5d;
+	color: white;
 }</string>
    </property>
    <layout class="QGridLayout" name="gridLayout">
+    <property name="horizontalSpacing">
+     <number>6</number>
+    </property>
     <item row="0" column="2">
-     <layout class="QHBoxLayout" name="mainLayout">
+     <layout class="QHBoxLayout" name="mainLayout" stretch="0,0,0">
       <property name="spacing">
        <number>15</number>
       </property>
       <property name="leftMargin">
-       <number>20</number>
+       <number>0</number>
       </property>
       <property name="topMargin">
        <number>0</number>
       </property>
       <property name="rightMargin">
-       <number>20</number>
+       <number>0</number>
       </property>
       <property name="bottomMargin">
        <number>20</number>
@@ -53,6 +122,12 @@ QLineEdit {
         </property>
         <item>
          <widget class="QLabel" name="categoriesLabel">
+          <property name="sizePolicy">
+           <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+            <horstretch>0</horstretch>
+            <verstretch>0</verstretch>
+           </sizepolicy>
+          </property>
           <property name="font">
            <font>
             <pointsize>13</pointsize>
@@ -83,7 +158,7 @@ QLineEdit {
         <item>
          <widget class="QListWidget" name="categoryList">
           <property name="sizePolicy">
-           <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
+           <sizepolicy hsizetype="Fixed" vsizetype="Expanding">
             <horstretch>0</horstretch>
             <verstretch>0</verstretch>
            </sizepolicy>
@@ -103,7 +178,18 @@ QLineEdit {
           <property name="font">
            <font>
             <pointsize>12</pointsize>
+            <bold>false</bold>
+            <kerning>true</kerning>
            </font>
+          </property>
+          <property name="cursor" stdset="0">
+           <cursorShape>ArrowCursor</cursorShape>
+          </property>
+          <property name="mouseTracking">
+           <bool>false</bool>
+          </property>
+          <property name="layoutDirection">
+           <enum>Qt::LeftToRight</enum>
           </property>
           <property name="styleSheet">
            <string notr="true">QListWidget {
@@ -112,14 +198,14 @@ QLineEdit {
 	border-radius: 7px;
 }
 
-QListWidget:item:selected {
-	color: rgb(66,66,66);
-	background-color: rgb(89, 197, 255);
+QListWidget::item:selected {
+	background-color: rgb(71, 29, 93);
+	color: white;
 }
 
 QListWidget:item:hover {
-	color: red;
-	background-color: rgb(50, 50, 50);
+	background-color: rgb(71, 29, 93);
+	color: white;
 }
 
 
@@ -128,6 +214,24 @@ QListWidget:item:hover {
           </property>
           <property name="sizeAdjustPolicy">
            <enum>QAbstractScrollArea::AdjustToContents</enum>
+          </property>
+          <property name="editTriggers">
+           <set>QAbstractItemView::DoubleClicked|QAbstractItemView::EditKeyPressed|QAbstractItemView::SelectedClicked</set>
+          </property>
+          <property name="alternatingRowColors">
+           <bool>false</bool>
+          </property>
+          <property name="selectionMode">
+           <enum>QAbstractItemView::SingleSelection</enum>
+          </property>
+          <property name="selectionBehavior">
+           <enum>QAbstractItemView::SelectRows</enum>
+          </property>
+          <property name="viewMode">
+           <enum>QListView::ListMode</enum>
+          </property>
+          <property name="selectionRectVisible">
+           <bool>false</bool>
           </property>
           <item>
            <property name="text">
@@ -188,7 +292,7 @@ QListWidget:item:hover {
         <item>
          <widget class="QListWidget" name="splitList">
           <property name="sizePolicy">
-           <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
+           <sizepolicy hsizetype="Fixed" vsizetype="Expanding">
             <horstretch>0</horstretch>
             <verstretch>0</verstretch>
            </sizepolicy>
@@ -202,13 +306,21 @@ QListWidget:item:hover {
           <property name="maximumSize">
            <size>
             <width>200</width>
-            <height>16777215</height>
+            <height>166666</height>
            </size>
           </property>
           <property name="font">
            <font>
             <pointsize>12</pointsize>
+            <bold>false</bold>
+            <kerning>true</kerning>
            </font>
+          </property>
+          <property name="cursor" stdset="0">
+           <cursorShape>ArrowCursor</cursorShape>
+          </property>
+          <property name="mouseTracking">
+           <bool>false</bool>
           </property>
           <property name="styleSheet">
            <string notr="true">QListWidget {
@@ -217,24 +329,33 @@ QListWidget:item:hover {
 	border-radius: 7px;
 }
 
-QListWidget:item:selected {
-	color: rgb(66,66,66);
-	background-color: rgb(89, 197, 255);
+QListWidget::item:selected {
+	color: white;
+	background-color: rgb(71, 29, 93);
 }
 
-QListWidget:item:hover {
-	color: red;
-	background-color: rgb(50, 50, 50);
+QListWidget::item:hover {
+	color: white;
+	background-color: rgb(71, 29, 93);
 }</string>
           </property>
           <property name="sizeAdjustPolicy">
            <enum>QAbstractScrollArea::AdjustToContents</enum>
           </property>
+          <property name="editTriggers">
+           <set>QAbstractItemView::DoubleClicked|QAbstractItemView::EditKeyPressed|QAbstractItemView::SelectedClicked</set>
+          </property>
+          <property name="alternatingRowColors">
+           <bool>false</bool>
+          </property>
           <property name="selectionMode">
            <enum>QAbstractItemView::SingleSelection</enum>
           </property>
           <property name="selectionBehavior">
-           <enum>QAbstractItemView::SelectItems</enum>
+           <enum>QAbstractItemView::SelectRows</enum>
+          </property>
+          <property name="selectionRectVisible">
+           <bool>false</bool>
           </property>
           <item>
            <property name="text">
@@ -257,6 +378,9 @@ QListWidget:item:hover {
       </item>
       <item>
        <layout class="QVBoxLayout" name="formWrapperLayout">
+        <property name="topMargin">
+         <number>0</number>
+        </property>
         <property name="rightMargin">
          <number>0</number>
         </property>
@@ -264,12 +388,69 @@ QListWidget:item:hover {
          <number>0</number>
         </property>
         <item>
+         <widget class="QLabel" name="activeCategory">
+          <property name="font">
+           <font>
+            <pointsize>13</pointsize>
+            <italic>true</italic>
+            <bold>true</bold>
+            <underline>false</underline>
+           </font>
+          </property>
+          <property name="styleSheet">
+           <string notr="true">QLabel {
+	color: #080a5d;
+}</string>
+          </property>
+          <property name="text">
+           <string>Active Category: &lt;Category Name&gt;</string>
+          </property>
+          <property name="wordWrap">
+           <bool>true</bool>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QPushButton" name="setActiveButton">
+          <property name="sizePolicy">
+           <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+            <horstretch>0</horstretch>
+            <verstretch>0</verstretch>
+           </sizepolicy>
+          </property>
+          <property name="minimumSize">
+           <size>
+            <width>250</width>
+            <height>50</height>
+           </size>
+          </property>
+          <property name="maximumSize">
+           <size>
+            <width>250</width>
+            <height>50</height>
+           </size>
+          </property>
+          <property name="font">
+           <font>
+            <pointsize>12</pointsize>
+            <bold>true</bold>
+           </font>
+          </property>
+          <property name="cursor">
+           <cursorShape>PointingHandCursor</cursorShape>
+          </property>
+          <property name="text">
+           <string>Set selected category as active</string>
+          </property>
+         </widget>
+        </item>
+        <item>
          <layout class="QHBoxLayout" name="formLayout">
           <property name="leftMargin">
            <number>0</number>
           </property>
           <property name="rightMargin">
-           <number>20</number>
+           <number>0</number>
           </property>
           <property name="bottomMargin">
            <number>10</number>
@@ -287,6 +468,9 @@ QListWidget:item:hover {
             </property>
             <item>
              <widget class="QLabel" name="label_2">
+              <property name="enabled">
+               <bool>true</bool>
+              </property>
               <property name="sizePolicy">
                <sizepolicy hsizetype="Expanding" vsizetype="Preferred">
                 <horstretch>0</horstretch>
@@ -298,6 +482,14 @@ QListWidget:item:hover {
                 <width>100</width>
                 <height>16777215</height>
                </size>
+              </property>
+              <property name="font">
+               <font>
+                <pointsize>11</pointsize>
+               </font>
+              </property>
+              <property name="toolTip">
+               <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;This is the name used to start a prediction via Twitch chat.&lt;/p&gt;&lt;p&gt;This name must be unique across all predictions of a certain category.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
               </property>
               <property name="text">
                <string>Name *</string>
@@ -306,6 +498,9 @@ QListWidget:item:hover {
             </item>
             <item>
              <widget class="QLabel" name="label">
+              <property name="enabled">
+               <bool>true</bool>
+              </property>
               <property name="sizePolicy">
                <sizepolicy hsizetype="Expanding" vsizetype="Preferred">
                 <horstretch>0</horstretch>
@@ -317,6 +512,11 @@ QListWidget:item:hover {
                 <width>100</width>
                 <height>16777215</height>
                </size>
+              </property>
+              <property name="font">
+               <font>
+                <pointsize>11</pointsize>
+               </font>
               </property>
               <property name="text">
                <string>Auto start</string>
@@ -324,7 +524,44 @@ QListWidget:item:hover {
              </widget>
             </item>
             <item>
+             <widget class="QLabel" name="label_7">
+              <property name="maximumSize">
+               <size>
+                <width>100</width>
+                <height>16777215</height>
+               </size>
+              </property>
+              <property name="font">
+               <font>
+                <pointsize>11</pointsize>
+               </font>
+              </property>
+              <property name="text">
+               <string>Split name</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <spacer name="verticalSpacer_2">
+              <property name="orientation">
+               <enum>Qt::Vertical</enum>
+              </property>
+              <property name="sizeType">
+               <enum>QSizePolicy::Maximum</enum>
+              </property>
+              <property name="sizeHint" stdset="0">
+               <size>
+                <width>20</width>
+                <height>40</height>
+               </size>
+              </property>
+             </spacer>
+            </item>
+            <item>
              <widget class="QLabel" name="label_6">
+              <property name="enabled">
+               <bool>true</bool>
+              </property>
               <property name="sizePolicy">
                <sizepolicy hsizetype="Expanding" vsizetype="Preferred">
                 <horstretch>0</horstretch>
@@ -336,6 +573,11 @@ QListWidget:item:hover {
                 <width>100</width>
                 <height>16777215</height>
                </size>
+              </property>
+              <property name="font">
+               <font>
+                <pointsize>11</pointsize>
+               </font>
               </property>
               <property name="text">
                <string>Title *</string>
@@ -344,6 +586,9 @@ QListWidget:item:hover {
             </item>
             <item>
              <widget class="QLabel" name="label_12">
+              <property name="enabled">
+               <bool>true</bool>
+              </property>
               <property name="sizePolicy">
                <sizepolicy hsizetype="Expanding" vsizetype="Preferred">
                 <horstretch>0</horstretch>
@@ -355,6 +600,11 @@ QListWidget:item:hover {
                 <width>100</width>
                 <height>16777215</height>
                </size>
+              </property>
+              <property name="font">
+               <font>
+                <pointsize>11</pointsize>
+               </font>
               </property>
               <property name="text">
                <string>Outcome 1 *</string>
@@ -363,6 +613,9 @@ QListWidget:item:hover {
             </item>
             <item>
              <widget class="QLabel" name="label_11">
+              <property name="enabled">
+               <bool>true</bool>
+              </property>
               <property name="sizePolicy">
                <sizepolicy hsizetype="Expanding" vsizetype="Preferred">
                 <horstretch>0</horstretch>
@@ -374,6 +627,11 @@ QListWidget:item:hover {
                 <width>100</width>
                 <height>16777215</height>
                </size>
+              </property>
+              <property name="font">
+               <font>
+                <pointsize>11</pointsize>
+               </font>
               </property>
               <property name="text">
                <string>Outcome 2 *</string>
@@ -382,6 +640,9 @@ QListWidget:item:hover {
             </item>
             <item>
              <widget class="QLabel" name="label_10">
+              <property name="enabled">
+               <bool>true</bool>
+              </property>
               <property name="sizePolicy">
                <sizepolicy hsizetype="Expanding" vsizetype="Preferred">
                 <horstretch>0</horstretch>
@@ -393,6 +654,11 @@ QListWidget:item:hover {
                 <width>100</width>
                 <height>16777215</height>
                </size>
+              </property>
+              <property name="font">
+               <font>
+                <pointsize>11</pointsize>
+               </font>
               </property>
               <property name="text">
                <string>Outcome 3</string>
@@ -401,6 +667,9 @@ QListWidget:item:hover {
             </item>
             <item>
              <widget class="QLabel" name="label_9">
+              <property name="enabled">
+               <bool>true</bool>
+              </property>
               <property name="sizePolicy">
                <sizepolicy hsizetype="Expanding" vsizetype="Preferred">
                 <horstretch>0</horstretch>
@@ -412,6 +681,11 @@ QListWidget:item:hover {
                 <width>100</width>
                 <height>16777215</height>
                </size>
+              </property>
+              <property name="font">
+               <font>
+                <pointsize>11</pointsize>
+               </font>
               </property>
               <property name="text">
                <string>Outcome 4</string>
@@ -420,6 +694,9 @@ QListWidget:item:hover {
             </item>
             <item>
              <widget class="QLabel" name="label_8">
+              <property name="enabled">
+               <bool>true</bool>
+              </property>
               <property name="sizePolicy">
                <sizepolicy hsizetype="Expanding" vsizetype="Preferred">
                 <horstretch>0</horstretch>
@@ -431,6 +708,11 @@ QListWidget:item:hover {
                 <width>100</width>
                 <height>16777215</height>
                </size>
+              </property>
+              <property name="font">
+               <font>
+                <pointsize>11</pointsize>
+               </font>
               </property>
               <property name="text">
                <string>Outcome 5</string>
@@ -439,6 +721,9 @@ QListWidget:item:hover {
             </item>
             <item>
              <widget class="QLabel" name="label_4">
+              <property name="enabled">
+               <bool>true</bool>
+              </property>
               <property name="sizePolicy">
                <sizepolicy hsizetype="Expanding" vsizetype="Preferred">
                 <horstretch>0</horstretch>
@@ -450,6 +735,11 @@ QListWidget:item:hover {
                 <width>100</width>
                 <height>16777215</height>
                </size>
+              </property>
+              <property name="font">
+               <font>
+                <pointsize>11</pointsize>
+               </font>
               </property>
               <property name="text">
                <string>Outcome 6</string>
@@ -458,6 +748,9 @@ QListWidget:item:hover {
             </item>
             <item>
              <widget class="QLabel" name="label_5">
+              <property name="enabled">
+               <bool>true</bool>
+              </property>
               <property name="sizePolicy">
                <sizepolicy hsizetype="Expanding" vsizetype="Preferred">
                 <horstretch>0</horstretch>
@@ -469,6 +762,11 @@ QListWidget:item:hover {
                 <width>100</width>
                 <height>16777215</height>
                </size>
+              </property>
+              <property name="font">
+               <font>
+                <pointsize>11</pointsize>
+               </font>
               </property>
               <property name="text">
                <string>Outcome 7</string>
@@ -477,6 +775,9 @@ QListWidget:item:hover {
             </item>
             <item>
              <widget class="QLabel" name="label_3">
+              <property name="enabled">
+               <bool>true</bool>
+              </property>
               <property name="sizePolicy">
                <sizepolicy hsizetype="Expanding" vsizetype="Preferred">
                 <horstretch>0</horstretch>
@@ -488,6 +789,11 @@ QListWidget:item:hover {
                 <width>100</width>
                 <height>16777215</height>
                </size>
+              </property>
+              <property name="font">
+               <font>
+                <pointsize>11</pointsize>
+               </font>
               </property>
               <property name="text">
                <string>Outcome 8</string>
@@ -496,6 +802,9 @@ QListWidget:item:hover {
             </item>
             <item>
              <widget class="QLabel" name="label_14">
+              <property name="enabled">
+               <bool>true</bool>
+              </property>
               <property name="sizePolicy">
                <sizepolicy hsizetype="Expanding" vsizetype="Preferred">
                 <horstretch>0</horstretch>
@@ -507,6 +816,11 @@ QListWidget:item:hover {
                 <width>100</width>
                 <height>16777215</height>
                </size>
+              </property>
+              <property name="font">
+               <font>
+                <pointsize>11</pointsize>
+               </font>
               </property>
               <property name="text">
                <string>Outcome 9</string>
@@ -515,6 +829,9 @@ QListWidget:item:hover {
             </item>
             <item>
              <widget class="QLabel" name="label_13">
+              <property name="enabled">
+               <bool>true</bool>
+              </property>
               <property name="sizePolicy">
                <sizepolicy hsizetype="Expanding" vsizetype="Preferred">
                 <horstretch>0</horstretch>
@@ -527,6 +844,11 @@ QListWidget:item:hover {
                 <height>16777215</height>
                </size>
               </property>
+              <property name="font">
+               <font>
+                <pointsize>11</pointsize>
+               </font>
+              </property>
               <property name="text">
                <string>Outcome 10</string>
               </property>
@@ -534,6 +856,14 @@ QListWidget:item:hover {
             </item>
             <item>
              <widget class="QLabel" name="label_15">
+              <property name="enabled">
+               <bool>true</bool>
+              </property>
+              <property name="font">
+               <font>
+                <pointsize>11</pointsize>
+               </font>
+              </property>
               <property name="text">
                <string>Window (in seconds) *</string>
               </property>
@@ -559,9 +889,14 @@ QListWidget:item:hover {
               </property>
               <property name="maximumSize">
                <size>
-                <width>1600000</width>
+                <width>250</width>
                 <height>25</height>
                </size>
+              </property>
+              <property name="font">
+               <font>
+                <pointsize>11</pointsize>
+               </font>
               </property>
               <property name="styleSheet">
                <string notr="true"/>
@@ -569,14 +904,46 @@ QListWidget:item:hover {
              </widget>
             </item>
             <item>
-             <widget class="QCheckBox" name="checkBox">
+             <widget class="QCheckBox" name="autoStart">
+              <property name="minimumSize">
+               <size>
+                <width>40</width>
+                <height>25</height>
+               </size>
+              </property>
+              <property name="maximumSize">
+               <size>
+                <width>250</width>
+                <height>25</height>
+               </size>
+              </property>
+              <property name="sizeIncrement">
+               <size>
+                <width>0</width>
+                <height>0</height>
+               </size>
+              </property>
+              <property name="font">
+               <font>
+                <pointsize>9</pointsize>
+               </font>
+              </property>
               <property name="text">
-               <string>CheckBox</string>
+               <string/>
+              </property>
+              <property name="iconSize">
+               <size>
+                <width>0</width>
+                <height>0</height>
+               </size>
+              </property>
+              <property name="checked">
+               <bool>true</bool>
               </property>
              </widget>
             </item>
             <item>
-             <widget class="QLineEdit" name="lineEdit_12">
+             <widget class="QLineEdit" name="lineEdit_10">
               <property name="minimumSize">
                <size>
                 <width>200</width>
@@ -585,9 +952,51 @@ QListWidget:item:hover {
               </property>
               <property name="maximumSize">
                <size>
-                <width>1600000</width>
+                <width>250</width>
                 <height>25</height>
                </size>
+              </property>
+              <property name="font">
+               <font>
+                <pointsize>11</pointsize>
+               </font>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <spacer name="verticalSpacer">
+              <property name="orientation">
+               <enum>Qt::Vertical</enum>
+              </property>
+              <property name="sizeType">
+               <enum>QSizePolicy::Maximum</enum>
+              </property>
+              <property name="sizeHint" stdset="0">
+               <size>
+                <width>20</width>
+                <height>40</height>
+               </size>
+              </property>
+             </spacer>
+            </item>
+            <item>
+             <widget class="QLineEdit" name="titleLine">
+              <property name="minimumSize">
+               <size>
+                <width>200</width>
+                <height>25</height>
+               </size>
+              </property>
+              <property name="maximumSize">
+               <size>
+                <width>250</width>
+                <height>25</height>
+               </size>
+              </property>
+              <property name="font">
+               <font>
+                <pointsize>11</pointsize>
+               </font>
               </property>
              </widget>
             </item>
@@ -601,9 +1010,14 @@ QListWidget:item:hover {
               </property>
               <property name="maximumSize">
                <size>
-                <width>1600000</width>
+                <width>250</width>
                 <height>25</height>
                </size>
+              </property>
+              <property name="font">
+               <font>
+                <pointsize>11</pointsize>
+               </font>
               </property>
              </widget>
             </item>
@@ -617,9 +1031,14 @@ QListWidget:item:hover {
               </property>
               <property name="maximumSize">
                <size>
-                <width>1600000</width>
+                <width>250</width>
                 <height>25</height>
                </size>
+              </property>
+              <property name="font">
+               <font>
+                <pointsize>11</pointsize>
+               </font>
               </property>
               <property name="styleSheet">
                <string notr="true"/>
@@ -636,9 +1055,14 @@ QListWidget:item:hover {
               </property>
               <property name="maximumSize">
                <size>
-                <width>1600000</width>
+                <width>250</width>
                 <height>25</height>
                </size>
+              </property>
+              <property name="font">
+               <font>
+                <pointsize>11</pointsize>
+               </font>
               </property>
              </widget>
             </item>
@@ -652,9 +1076,14 @@ QListWidget:item:hover {
               </property>
               <property name="maximumSize">
                <size>
-                <width>1600000</width>
+                <width>250</width>
                 <height>25</height>
                </size>
+              </property>
+              <property name="font">
+               <font>
+                <pointsize>11</pointsize>
+               </font>
               </property>
              </widget>
             </item>
@@ -668,14 +1097,25 @@ QListWidget:item:hover {
               </property>
               <property name="maximumSize">
                <size>
-                <width>1600000</width>
+                <width>250</width>
                 <height>25</height>
                </size>
+              </property>
+              <property name="font">
+               <font>
+                <pointsize>11</pointsize>
+               </font>
               </property>
              </widget>
             </item>
             <item>
              <widget class="QLineEdit" name="lineEdit_5">
+              <property name="sizePolicy">
+               <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
+                <horstretch>0</horstretch>
+                <verstretch>0</verstretch>
+               </sizepolicy>
+              </property>
               <property name="minimumSize">
                <size>
                 <width>200</width>
@@ -684,9 +1124,14 @@ QListWidget:item:hover {
               </property>
               <property name="maximumSize">
                <size>
-                <width>1600000</width>
+                <width>250</width>
                 <height>25</height>
                </size>
+              </property>
+              <property name="font">
+               <font>
+                <pointsize>11</pointsize>
+               </font>
               </property>
              </widget>
             </item>
@@ -700,9 +1145,14 @@ QListWidget:item:hover {
               </property>
               <property name="maximumSize">
                <size>
-                <width>1600000</width>
+                <width>250</width>
                 <height>25</height>
                </size>
+              </property>
+              <property name="font">
+               <font>
+                <pointsize>11</pointsize>
+               </font>
               </property>
              </widget>
             </item>
@@ -716,9 +1166,14 @@ QListWidget:item:hover {
               </property>
               <property name="maximumSize">
                <size>
-                <width>1600000</width>
+                <width>250</width>
                 <height>25</height>
                </size>
+              </property>
+              <property name="font">
+               <font>
+                <pointsize>11</pointsize>
+               </font>
               </property>
              </widget>
             </item>
@@ -732,9 +1187,14 @@ QListWidget:item:hover {
               </property>
               <property name="maximumSize">
                <size>
-                <width>1600000</width>
+                <width>250</width>
                 <height>25</height>
                </size>
+              </property>
+              <property name="font">
+               <font>
+                <pointsize>11</pointsize>
+               </font>
               </property>
              </widget>
             </item>
@@ -748,30 +1208,108 @@ QListWidget:item:hover {
               </property>
               <property name="maximumSize">
                <size>
-                <width>1600000</width>
+                <width>250</width>
                 <height>25</height>
                </size>
+              </property>
+              <property name="font">
+               <font>
+                <pointsize>11</pointsize>
+               </font>
               </property>
              </widget>
             </item>
             <item>
-             <widget class="QLineEdit" name="lineEdit_15"/>
+             <widget class="QLineEdit" name="lineEdit_15">
+              <property name="maximumSize">
+               <size>
+                <width>250</width>
+                <height>25</height>
+               </size>
+              </property>
+              <property name="font">
+               <font>
+                <pointsize>11</pointsize>
+               </font>
+              </property>
+             </widget>
             </item>
            </layout>
           </item>
          </layout>
         </item>
         <item>
-         <layout class="QHBoxLayout" name="buttonLayout">
+         <layout class="QHBoxLayout" name="buttonLayout" stretch="0,0">
+          <property name="spacing">
+           <number>0</number>
+          </property>
+          <property name="sizeConstraint">
+           <enum>QLayout::SetDefaultConstraint</enum>
+          </property>
+          <property name="rightMargin">
+           <number>120</number>
+          </property>
           <item>
-           <widget class="QPushButton" name="pushButton_2">
+           <widget class="QPushButton" name="saveButton">
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
+            <property name="minimumSize">
+             <size>
+              <width>80</width>
+              <height>0</height>
+             </size>
+            </property>
+            <property name="maximumSize">
+             <size>
+              <width>125</width>
+              <height>50</height>
+             </size>
+            </property>
+            <property name="font">
+             <font>
+              <pointsize>12</pointsize>
+             </font>
+            </property>
+            <property name="cursor">
+             <cursorShape>PointingHandCursor</cursorShape>
+            </property>
             <property name="text">
-             <string>Save</string>
+             <string>Save Prediction</string>
             </property>
            </widget>
           </item>
           <item>
-           <widget class="QPushButton" name="pushButton">
+           <widget class="QPushButton" name="deleteButton">
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
+            <property name="minimumSize">
+             <size>
+              <width>80</width>
+              <height>50</height>
+             </size>
+            </property>
+            <property name="maximumSize">
+             <size>
+              <width>80</width>
+              <height>50</height>
+             </size>
+            </property>
+            <property name="font">
+             <font>
+              <pointsize>12</pointsize>
+             </font>
+            </property>
+            <property name="cursor">
+             <cursorShape>PointingHandCursor</cursorShape>
+            </property>
             <property name="text">
              <string>Delete</string>
             </property>
@@ -790,7 +1328,7 @@ QListWidget:item:hover {
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>1077</width>
+     <width>900</width>
      <height>22</height>
     </rect>
    </property>
