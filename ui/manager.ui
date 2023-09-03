@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>900</width>
-    <height>650</height>
+    <height>676</height>
    </rect>
   </property>
   <property name="sizePolicy">
@@ -233,21 +233,6 @@ QListWidget:item:hover {
           <property name="selectionRectVisible">
            <bool>false</bool>
           </property>
-          <item>
-           <property name="text">
-            <string>Any% (Classic)</string>
-           </property>
-          </item>
-          <item>
-           <property name="text">
-            <string>100% (Deathwish)</string>
-           </property>
-          </item>
-          <item>
-           <property name="text">
-            <string>trevor%</string>
-           </property>
-          </item>
          </widget>
         </item>
        </layout>
@@ -340,7 +325,7 @@ QListWidget::item:hover {
 }</string>
           </property>
           <property name="sizeAdjustPolicy">
-           <enum>QAbstractScrollArea::AdjustToContents</enum>
+           <enum>QAbstractScrollArea::AdjustIgnored</enum>
           </property>
           <property name="editTriggers">
            <set>QAbstractItemView::DoubleClicked|QAbstractItemView::EditKeyPressed|QAbstractItemView::SelectedClicked</set>
@@ -357,21 +342,6 @@ QListWidget::item:hover {
           <property name="selectionRectVisible">
            <bool>false</bool>
           </property>
-          <item>
-           <property name="text">
-            <string>Prologue</string>
-           </property>
-          </item>
-          <item>
-           <property name="text">
-            <string>Franklin/Lamar</string>
-           </property>
-          </item>
-          <item>
-           <property name="text">
-            <string>Repo</string>
-           </property>
-          </item>
          </widget>
         </item>
        </layout>
@@ -467,7 +437,7 @@ QListWidget::item:hover {
              <number>0</number>
             </property>
             <item>
-             <widget class="QLabel" name="label_2">
+             <widget class="QLabel" name="label_name">
               <property name="enabled">
                <bool>true</bool>
               </property>
@@ -497,7 +467,7 @@ QListWidget::item:hover {
              </widget>
             </item>
             <item>
-             <widget class="QLabel" name="label">
+             <widget class="QLabel" name="label_autoStart">
               <property name="enabled">
                <bool>true</bool>
               </property>
@@ -524,7 +494,7 @@ QListWidget::item:hover {
              </widget>
             </item>
             <item>
-             <widget class="QLabel" name="label_7">
+             <widget class="QLabel" name="label_splitName">
               <property name="maximumSize">
                <size>
                 <width>100</width>
@@ -558,7 +528,7 @@ QListWidget::item:hover {
              </spacer>
             </item>
             <item>
-             <widget class="QLabel" name="label_6">
+             <widget class="QLabel" name="label_title">
               <property name="enabled">
                <bool>true</bool>
               </property>
@@ -585,7 +555,7 @@ QListWidget::item:hover {
              </widget>
             </item>
             <item>
-             <widget class="QLabel" name="label_12">
+             <widget class="QLabel" name="label_outcome1">
               <property name="enabled">
                <bool>true</bool>
               </property>
@@ -612,7 +582,7 @@ QListWidget::item:hover {
              </widget>
             </item>
             <item>
-             <widget class="QLabel" name="label_11">
+             <widget class="QLabel" name="label_outcome2">
               <property name="enabled">
                <bool>true</bool>
               </property>
@@ -639,7 +609,7 @@ QListWidget::item:hover {
              </widget>
             </item>
             <item>
-             <widget class="QLabel" name="label_10">
+             <widget class="QLabel" name="label_outcome3">
               <property name="enabled">
                <bool>true</bool>
               </property>
@@ -666,7 +636,7 @@ QListWidget::item:hover {
              </widget>
             </item>
             <item>
-             <widget class="QLabel" name="label_9">
+             <widget class="QLabel" name="label_outcome4">
               <property name="enabled">
                <bool>true</bool>
               </property>
@@ -693,7 +663,7 @@ QListWidget::item:hover {
              </widget>
             </item>
             <item>
-             <widget class="QLabel" name="label_8">
+             <widget class="QLabel" name="label_outcome5">
               <property name="enabled">
                <bool>true</bool>
               </property>
@@ -720,7 +690,7 @@ QListWidget::item:hover {
              </widget>
             </item>
             <item>
-             <widget class="QLabel" name="label_4">
+             <widget class="QLabel" name="label_outcome6">
               <property name="enabled">
                <bool>true</bool>
               </property>
@@ -747,7 +717,7 @@ QListWidget::item:hover {
              </widget>
             </item>
             <item>
-             <widget class="QLabel" name="label_5">
+             <widget class="QLabel" name="label_outcome7">
               <property name="enabled">
                <bool>true</bool>
               </property>
@@ -774,7 +744,7 @@ QListWidget::item:hover {
              </widget>
             </item>
             <item>
-             <widget class="QLabel" name="label_3">
+             <widget class="QLabel" name="label_outcome8">
               <property name="enabled">
                <bool>true</bool>
               </property>
@@ -801,7 +771,7 @@ QListWidget::item:hover {
              </widget>
             </item>
             <item>
-             <widget class="QLabel" name="label_14">
+             <widget class="QLabel" name="label_outcome9">
               <property name="enabled">
                <bool>true</bool>
               </property>
@@ -828,7 +798,7 @@ QListWidget::item:hover {
              </widget>
             </item>
             <item>
-             <widget class="QLabel" name="label_13">
+             <widget class="QLabel" name="label_outcome10">
               <property name="enabled">
                <bool>true</bool>
               </property>
@@ -855,7 +825,7 @@ QListWidget::item:hover {
              </widget>
             </item>
             <item>
-             <widget class="QLabel" name="label_15">
+             <widget class="QLabel" name="label_window">
               <property name="enabled">
                <bool>true</bool>
               </property>
@@ -872,7 +842,7 @@ QListWidget::item:hover {
            </layout>
           </item>
           <item>
-           <layout class="QVBoxLayout" name="textLayout">
+           <layout class="QVBoxLayout" name="fieldLayout">
             <property name="spacing">
              <number>3</number>
             </property>
@@ -880,7 +850,7 @@ QListWidget::item:hover {
              <number>0</number>
             </property>
             <item>
-             <widget class="QLineEdit" name="lineEdit">
+             <widget class="QLineEdit" name="field_name">
               <property name="minimumSize">
                <size>
                 <width>200</width>
@@ -904,7 +874,7 @@ QListWidget::item:hover {
              </widget>
             </item>
             <item>
-             <widget class="QCheckBox" name="autoStart">
+             <widget class="QCheckBox" name="field_autoStart">
               <property name="minimumSize">
                <size>
                 <width>40</width>
@@ -943,7 +913,7 @@ QListWidget::item:hover {
              </widget>
             </item>
             <item>
-             <widget class="QLineEdit" name="lineEdit_10">
+             <widget class="QLineEdit" name="field_splitName">
               <property name="minimumSize">
                <size>
                 <width>200</width>
@@ -960,6 +930,23 @@ QListWidget::item:hover {
                <font>
                 <pointsize>11</pointsize>
                </font>
+              </property>
+              <property name="cursor">
+               <cursorShape>ForbiddenCursor</cursorShape>
+              </property>
+              <property name="focusPolicy">
+               <enum>Qt::NoFocus</enum>
+              </property>
+              <property name="toolTip">
+               <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;br/&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+              </property>
+              <property name="styleSheet">
+               <string notr="true">QLineEdit{
+	background: lightgray;
+}</string>
+              </property>
+              <property name="readOnly">
+               <bool>true</bool>
               </property>
              </widget>
             </item>
@@ -980,7 +967,7 @@ QListWidget::item:hover {
              </spacer>
             </item>
             <item>
-             <widget class="QLineEdit" name="titleLine">
+             <widget class="QLineEdit" name="field_title">
               <property name="minimumSize">
                <size>
                 <width>200</width>
@@ -1001,7 +988,7 @@ QListWidget::item:hover {
              </widget>
             </item>
             <item>
-             <widget class="QLineEdit" name="lineEdit_13">
+             <widget class="QLineEdit" name="field_outcome1">
               <property name="minimumSize">
                <size>
                 <width>200</width>
@@ -1022,7 +1009,7 @@ QListWidget::item:hover {
              </widget>
             </item>
             <item>
-             <widget class="QLineEdit" name="lineEdit_14">
+             <widget class="QLineEdit" name="field_outcome2">
               <property name="minimumSize">
                <size>
                 <width>200</width>
@@ -1046,7 +1033,7 @@ QListWidget::item:hover {
              </widget>
             </item>
             <item>
-             <widget class="QLineEdit" name="lineEdit_2">
+             <widget class="QLineEdit" name="field_outcome3">
               <property name="minimumSize">
                <size>
                 <width>200</width>
@@ -1067,7 +1054,7 @@ QListWidget::item:hover {
              </widget>
             </item>
             <item>
-             <widget class="QLineEdit" name="lineEdit_3">
+             <widget class="QLineEdit" name="field_outcome4">
               <property name="minimumSize">
                <size>
                 <width>200</width>
@@ -1088,7 +1075,7 @@ QListWidget::item:hover {
              </widget>
             </item>
             <item>
-             <widget class="QLineEdit" name="lineEdit_4">
+             <widget class="QLineEdit" name="field_outcome5">
               <property name="minimumSize">
                <size>
                 <width>200</width>
@@ -1109,7 +1096,7 @@ QListWidget::item:hover {
              </widget>
             </item>
             <item>
-             <widget class="QLineEdit" name="lineEdit_5">
+             <widget class="QLineEdit" name="field_outcome6">
               <property name="sizePolicy">
                <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
                 <horstretch>0</horstretch>
@@ -1136,7 +1123,7 @@ QListWidget::item:hover {
              </widget>
             </item>
             <item>
-             <widget class="QLineEdit" name="lineEdit_6">
+             <widget class="QLineEdit" name="field_outcome7">
               <property name="minimumSize">
                <size>
                 <width>200</width>
@@ -1157,7 +1144,7 @@ QListWidget::item:hover {
              </widget>
             </item>
             <item>
-             <widget class="QLineEdit" name="lineEdit_7">
+             <widget class="QLineEdit" name="field_outcome8">
               <property name="minimumSize">
                <size>
                 <width>200</width>
@@ -1178,7 +1165,7 @@ QListWidget::item:hover {
              </widget>
             </item>
             <item>
-             <widget class="QLineEdit" name="lineEdit_8">
+             <widget class="QLineEdit" name="field_outcome9">
               <property name="minimumSize">
                <size>
                 <width>200</width>
@@ -1199,7 +1186,7 @@ QListWidget::item:hover {
              </widget>
             </item>
             <item>
-             <widget class="QLineEdit" name="lineEdit_9">
+             <widget class="QLineEdit" name="field_outcome10">
               <property name="minimumSize">
                <size>
                 <width>200</width>
@@ -1220,7 +1207,7 @@ QListWidget::item:hover {
              </widget>
             </item>
             <item>
-             <widget class="QLineEdit" name="lineEdit_15">
+             <widget class="QLineEdit" name="field_window">
               <property name="maximumSize">
                <size>
                 <width>250</width>
