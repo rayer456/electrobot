@@ -16,16 +16,14 @@ class LiveSplitData():
         variables = ''
         for var in vars:
             if var.text.lower() in ('yes', 'no'):
-                variables += f"{var.attrib.get('name')} "
+                variables += f"{var.attrib.get('name')}, "
             else:
-                variables += f'{var.text} '
+                variables += f'{var.text}, '
             
         if variables != '':
-            category = f'{category} ({variables.strip()})'
+            category = f'{category} ({variables.removesuffix(", ")})'
 
         return category
 
     def get_split_names(self) -> list:
         return [segment.find('Name').text for segment in self.xroot.find('Segments')]
-    
-    

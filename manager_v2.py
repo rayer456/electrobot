@@ -1,10 +1,8 @@
 import sys
 import os
 import json
-from time import perf_counter
 
-from PyQt6.QtWidgets import QApplication, QMainWindow, QFileDialog, QPushButton, QSizePolicy, QLineEdit, QMessageBox, QStyle
-from PyQt6.QtCore import Qt
+from PyQt6.QtWidgets import QApplication, QMainWindow, QFileDialog, QMessageBox
 
 from prediction_window_ui import Ui_MainWindow
 from LiveSplitData import LiveSplitData
@@ -15,23 +13,23 @@ class Window(QMainWindow, Ui_MainWindow):
         super().__init__(parent)
         self.setupUi(self)
         self.setWindowTitle("Predictions Manager")
-
         self.connectFunctions()
 
         self.checkAndLoadData()
-        self.loadCatsInList()
         self.listOutcomes()
+        self.loadCatList()
+        self.setActiveCategory(clicked=False)
 
-
+        
     def connectFunctions(self):
         self.actionOpen.triggered.connect(self.selectFile)
         self.categoryList.itemClicked.connect(self.loadSplitList)
         self.splitList.itemSelectionChanged.connect(self.loadPredictionForm)
-        self.setActiveButton.clicked.connect(self.setCategoryAsActive)
+        self.setActiveButton.clicked.connect(lambda: self.setActiveCategory(clicked=True))
         self.saveButton.clicked.connect(self.savePrediction)
         self.deleteButton.clicked.connect(self.deletePrediction)
 
-        #on user change
+        #on user edit
         self.field_name.textEdited.connect(self.inputChange)
         self.field_autoStart.clicked.connect(self.inputChange)
         self.field_title.textEdited.connect(self.inputChange)
@@ -48,12 +46,11 @@ class Window(QMainWindow, Ui_MainWindow):
         self.field_window.textEdited.connect(self.inputChange)
 
 
-
     def checkAndLoadData(self):
         if not os.path.exists('predictions'):
             os.makedirs('predictions')
 
-        while 1:
+        while True:
             try:
                 with open('predictions/all_data.json', 'r') as file:
                     self.all_data: dict = json.load(file)
@@ -66,64 +63,6 @@ class Window(QMainWindow, Ui_MainWindow):
                     file.write(json.dumps(default))
 
 
-    def loadCatsInList(self):
-        self.categoryList.clear()
-        all_cats: list = self.all_data['cats']
-        for cat in all_cats:
-            self.categoryList.addItem(cat['category'])
-
-
-    def selectFile(self):
-        fileDialog = QFileDialog.getOpenFileNames(
-            self,
-            caption='Select one or more Livesplit files',
-            filter='*.lss'
-        )
-        paths = fileDialog[0]
-        if isinstance(paths, str):
-            if paths == '':
-                return
-            paths = list(paths)
-        
-        self.add_cats_to_datafile(paths)
-
-
-    def add_cats_to_datafile(self, paths: list):
-
-        for path in paths:
-            lsd = LiveSplitData(path=path)
-            subcategory = lsd.get_subcategory()
-
-            for cat in self.all_data['cats']:
-                if cat['category'] == subcategory:
-                    msg = QMessageBox()
-                    msg.setIcon(QMessageBox.Icon.Warning)
-                    msg.setText("This category is already in the list")
-                    msg.setWindowTitle("Warning")
-                    msg.exec()
-                    return
-
-            # list of objects containing split name and empty object
-            splits_with_preds = [{
-                'split_name': split_name,
-                'prediction': {},
-            } for split_name in lsd.get_split_names()]
-
-            new_cat = {
-                'category': f'{subcategory}',
-                'active': False, # only active if user sets it
-                'split_names': splits_with_preds
-            }
-
-            self.all_data['cats'].append(new_cat)
-
-        
-        with open('predictions/all_data.json', 'w') as file:
-            file.write(json.dumps(self.all_data))
-
-        self.loadCatsInList()
-
-    
     def listOutcomes(self):
         self.outcomes = [self.field_outcome1]
         self.outcomes.append(self.field_outcome2)
@@ -137,6 +76,14 @@ class Window(QMainWindow, Ui_MainWindow):
         self.outcomes.append(self.field_outcome10)
 
 
+    def loadCatList(self):
+        self.categoryList.clear()
+        for cat in self.all_data['cats']:
+            self.categoryList.addItem(cat['category'])
+            self.categoryList.setCurrentRow(0)
+            self.loadSplitList()
+
+    
     def loadSplitList(self):
         self.splitList.clear()
         selected_cat = self.categoryList.currentItem().text()
@@ -150,6 +97,86 @@ class Window(QMainWindow, Ui_MainWindow):
         self.splitList.setCurrentRow(0)
 
 
+    def setActiveCategory(self, clicked):
+            # replace existing one
+            if hasattr(self, 'activeCategory'):
+                try:
+                    self.activeCategory = self.categoryList.currentItem().text()
+                except AttributeError:
+                    msg = QMessageBox()
+                    msg.setIcon(QMessageBox.Icon.Warning)
+                    msg.setText("No category selected")
+                    msg.setWindowTitle("Warning")
+                    msg.exec()
+                    return
+                
+                for cat in self.all_data['cats']:
+                    if cat['category'] == self.activeCategory:
+                        cat['active'] = True
+                    else:
+                        cat['active'] = False
+            # initial
+            else:
+                for cat in self.all_data['cats']:
+                    if cat['active']:
+                        self.activeCategory = cat['category']
+                        break
+                # no active cat
+                else:
+                    self.activeCategory = None
+            
+            self.activeCategoryText.setText(f'Active Category: {self.activeCategory}')
+            
+            if clicked:
+                self.save_all_data()
+                self.saveToPredFile()
+
+
+    def selectFile(self):
+        paths, ext = QFileDialog.getOpenFileNames(
+            self,
+            caption='Select one or more Livesplit files',
+            filter='*.lss'
+        )
+        for path in paths:
+            if path == '':
+                return
+
+        self.add_cats_to_datafile(paths)
+
+
+    def add_cats_to_datafile(self, paths: list):
+        for path in paths:
+            lsd = LiveSplitData(path=path)
+            subcategory = lsd.get_subcategory()
+
+            for cat in self.all_data['cats']:
+                if cat['category'] == subcategory:
+                    msg = QMessageBox()
+                    msg.setIcon(QMessageBox.Icon.Warning)
+                    msg.setText(f"{subcategory} is already in the list")
+                    msg.setWindowTitle("Warning")
+                    msg.exec()
+                    return
+
+            # list of objects each containing split name and empty prediction
+            splits_with_preds = [{
+                'split_name': split_name,
+                'prediction': {},
+            } for split_name in lsd.get_split_names()]
+
+            new_cat = {
+                'category': subcategory,
+                'active': False, # only active if user sets it
+                'split_names': splits_with_preds
+            }
+
+            self.all_data['cats'].append(new_cat)
+        
+        self.save_all_data()
+        self.loadCatList()
+
+
     def loadPredictionForm(self):
         selected_cat = self.categoryList.currentItem().text()
         selected_split = self.splitList.currentItem().text()
@@ -159,13 +186,12 @@ class Window(QMainWindow, Ui_MainWindow):
             if cat['category'] == selected_cat:
                 for split in cat['split_names']:
                     if split['split_name'] == selected_split:
-                        if bool(split['prediction']): # if prediction present
-                            self.resetFields()
-                            self.populateFields(p=split['prediction'], split_name=split['split_name'])
-                        else:
-                            self.resetFields()
-                        
-                        self.savedStatus.setText("Saved")   
+                        self.resetFields()
+
+                        if split['prediction']: # if prediction present
+                            self.populateFields(split['prediction'], selected_split)
+
+                        self.savedStatus.setText('Saved')   
                         break
                 break
 
@@ -181,7 +207,6 @@ class Window(QMainWindow, Ui_MainWindow):
             self.outcomes[i].setText(pred_outcome['title'])
 
         self.field_window.setText(str(p['data']['prediction_window']))
-
 
 
     def resetFields(self):
@@ -201,27 +226,32 @@ class Window(QMainWindow, Ui_MainWindow):
         self.field_outcome10.clear()
         self.field_window.clear()
 
-        
-    def setCategoryAsActive(self):
-        # write to predictions.json
-        pass
-
 
     def inputChange(self):
         self.savedStatus.setText("Unsaved")    
 
 
     def savePrediction(self):
+        try:
+            selected_split = self.splitList.currentItem().text()
+        except AttributeError:
+            msg = QMessageBox()
+            msg.setIcon(QMessageBox.Icon.Warning)
+            msg.setText("No split selected")
+            msg.setWindowTitle("Warning")
+            msg.exec()
+            return
+        
         formIsValid = self.validateForm()
 
         if formIsValid:
-            # save form
             all_cats: list = self.all_data['cats']
+            selected_cat = self.categoryList.currentItem().text()
 
             for cat in all_cats:
-                if cat['category'] == self.categoryList.currentItem().text():
+                if cat['category'] == selected_cat:
                     for split in cat['split_names']:
-                        if split['split_name'] == self.splitList.currentItem().text():
+                        if split['split_name'] == selected_split:
 
                             new_prediction = {
                                 'auto_predict': {
@@ -251,11 +281,21 @@ class Window(QMainWindow, Ui_MainWindow):
 
             self.save_all_data()
             self.savedStatus.setText('Saved')
+            if self.activeCategory == selected_cat:
+                self.saveToPredFile()
 
 
     def deletePrediction(self):
-        selected_cat = self.categoryList.currentItem().text()
-        selected_split = self.splitList.currentItem().text()
+        try:
+            selected_cat = self.categoryList.currentItem().text()
+            selected_split = self.splitList.currentItem().text()
+        except AttributeError:
+            msg = QMessageBox()
+            msg.setIcon(QMessageBox.Icon.Warning)
+            msg.setText("No split selected")
+            msg.setWindowTitle("Warning")
+            msg.exec()
+            return
 
         for cat in self.all_data['cats']:
             if cat['category'] == selected_cat:
@@ -266,13 +306,32 @@ class Window(QMainWindow, Ui_MainWindow):
                 break
 
         self.resetFields()
-        self.savedStatus.setText('Deleted')
         self.save_all_data()
+        if self.activeCategory == selected_cat:
+            self.saveToPredFile()
+        self.savedStatus.setText('Deleted')
 
 
     def save_all_data(self):
         with open('predictions/all_data.json', 'w') as file:
             file.write(json.dumps(self.all_data))
+
+
+    def saveToPredFile(self):
+        predictions = {
+            'predictions': []
+        }
+
+        # get all preds of the active category
+        for cat in self.all_data['cats']:
+            if cat['active']:
+                for split in cat['split_names']:
+                    if split['prediction']:
+                        predictions['predictions'].append(split['prediction'])
+                break
+               
+        with open('predictions/predictions.json', 'w') as file:
+            file.write(json.dumps(predictions))
 
     
     def validateForm(self):
@@ -324,15 +383,12 @@ class Window(QMainWindow, Ui_MainWindow):
             msg.setWindowTitle("Invalid value")
             msg.exec()
             return 0
-        
+    
         return 1
         
-        
-
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)
     window = Window()
     window.show()
     sys.exit(app.exec())
-        

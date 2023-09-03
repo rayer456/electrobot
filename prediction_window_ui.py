@@ -38,25 +38,29 @@ class Ui_MainWindow(object):
 "}\n"
 "\n"
 "#saveButton {\n"
-"    background-color: green;\n"
+"    background-color: #0d7301;\n"
 "    color: white;\n"
 "    width: 100px;\n"
-"    border-radius: 12px\n"
+"    border-radius: 12px;\n"
+"    outline: 0;\n"
 "}\n"
 "\n"
 "#deleteButton {\n"
-"    background-color: red;\n"
+"    background-color: #a10000;\n"
 "    color: white;\n"
 "    width: 100px;\n"
-"    border-radius: 12px\n"
+"    border-radius: 12px;\n"
+"    outline: 0;\n"
 "}\n"
 "\n"
 "#saveButton:hover {\n"
+"    background-color: green;\n"
 "    color: white;\n"
 "    font-weight: bold;\n"
 "}\n"
 "\n"
 "#deleteButton:hover {\n"
+"    background-color: red;\n"
 "    color: white;\n"
 "    font-weight: bold;\n"
 "}\n"
@@ -65,7 +69,8 @@ class Ui_MainWindow(object):
 "    background-color: #1e255d;\n"
 "    color: white;\n"
 "    width: 100px;\n"
-"    border-radius: 12px\n"
+"    border-radius: 12px;\n"
+"    outline: 0;\n"
 "}\n"
 "\n"
 "#setActiveButton:hover {\n"
@@ -121,6 +126,7 @@ class Ui_MainWindow(object):
 "    background-color: lightgrey;\n"
 "    color: black;\n"
 "    border-radius: 7px;\n"
+"    outline: 0;\n"
 "}\n"
 "\n"
 "QListWidget::item:selected {\n"
@@ -140,7 +146,7 @@ class Ui_MainWindow(object):
         self.categoryList.setEditTriggers(QtWidgets.QAbstractItemView.EditTrigger.DoubleClicked|QtWidgets.QAbstractItemView.EditTrigger.EditKeyPressed|QtWidgets.QAbstractItemView.EditTrigger.SelectedClicked)
         self.categoryList.setAlternatingRowColors(False)
         self.categoryList.setSelectionMode(QtWidgets.QAbstractItemView.SelectionMode.SingleSelection)
-        self.categoryList.setSelectionBehavior(QtWidgets.QAbstractItemView.SelectionBehavior.SelectRows)
+        self.categoryList.setSelectionBehavior(QtWidgets.QAbstractItemView.SelectionBehavior.SelectItems)
         self.categoryList.setViewMode(QtWidgets.QListView.ViewMode.ListMode)
         self.categoryList.setSelectionRectVisible(False)
         self.categoryList.setObjectName("categoryList")
@@ -179,6 +185,7 @@ class Ui_MainWindow(object):
 "    background-color: lightgrey;\n"
 "    color: black;\n"
 "    border-radius: 7px;\n"
+"    outline: 0;\n"
 "}\n"
 "\n"
 "QListWidget::item:selected {\n"
@@ -202,19 +209,19 @@ class Ui_MainWindow(object):
         self.formWrapperLayout = QtWidgets.QVBoxLayout()
         self.formWrapperLayout.setContentsMargins(-1, 0, 0, 0)
         self.formWrapperLayout.setObjectName("formWrapperLayout")
-        self.activeCategory = QtWidgets.QLabel(parent=self.centralwidget)
+        self.activeCategoryText = QtWidgets.QLabel(parent=self.centralwidget)
         font = QtGui.QFont()
         font.setPointSize(13)
         font.setBold(True)
         font.setItalic(True)
         font.setUnderline(False)
-        self.activeCategory.setFont(font)
-        self.activeCategory.setStyleSheet("QLabel {\n"
+        self.activeCategoryText.setFont(font)
+        self.activeCategoryText.setStyleSheet("QLabel {\n"
 "    color: #080a5d;\n"
 "}")
-        self.activeCategory.setWordWrap(True)
-        self.activeCategory.setObjectName("activeCategory")
-        self.formWrapperLayout.addWidget(self.activeCategory)
+        self.activeCategoryText.setWordWrap(True)
+        self.activeCategoryText.setObjectName("activeCategoryText")
+        self.formWrapperLayout.addWidget(self.activeCategoryText)
         self.setActiveButton = QtWidgets.QPushButton(parent=self.centralwidget)
         sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Policy.Fixed, QtWidgets.QSizePolicy.Policy.Fixed)
         sizePolicy.setHorizontalStretch(0)
@@ -437,12 +444,16 @@ class Ui_MainWindow(object):
         self.field_name.setObjectName("field_name")
         self.fieldLayout.addWidget(self.field_name)
         self.field_autoStart = QtWidgets.QCheckBox(parent=self.centralwidget)
-        self.field_autoStart.setMinimumSize(QtCore.QSize(40, 25))
-        self.field_autoStart.setMaximumSize(QtCore.QSize(250, 25))
+        self.field_autoStart.setMinimumSize(QtCore.QSize(15, 25))
+        self.field_autoStart.setMaximumSize(QtCore.QSize(15, 25))
         self.field_autoStart.setSizeIncrement(QtCore.QSize(0, 0))
         font = QtGui.QFont()
         font.setPointSize(9)
         self.field_autoStart.setFont(font)
+        self.field_autoStart.setCursor(QtGui.QCursor(QtCore.Qt.CursorShape.ArrowCursor))
+        self.field_autoStart.setStyleSheet("QCheckBox {\n"
+"    outline: 0;\n"
+"}")
         self.field_autoStart.setText("")
         self.field_autoStart.setIconSize(QtCore.QSize(0, 0))
         self.field_autoStart.setChecked(True)
@@ -579,10 +590,11 @@ class Ui_MainWindow(object):
         sizePolicy.setVerticalStretch(0)
         sizePolicy.setHeightForWidth(self.saveButton.sizePolicy().hasHeightForWidth())
         self.saveButton.setSizePolicy(sizePolicy)
-        self.saveButton.setMinimumSize(QtCore.QSize(80, 0))
-        self.saveButton.setMaximumSize(QtCore.QSize(125, 50))
+        self.saveButton.setMinimumSize(QtCore.QSize(90, 0))
+        self.saveButton.setMaximumSize(QtCore.QSize(130, 50))
         font = QtGui.QFont()
         font.setPointSize(12)
+        font.setBold(True)
         self.saveButton.setFont(font)
         self.saveButton.setCursor(QtGui.QCursor(QtCore.Qt.CursorShape.PointingHandCursor))
         self.saveButton.setObjectName("saveButton")
@@ -597,6 +609,7 @@ class Ui_MainWindow(object):
         self.deleteButton.setMaximumSize(QtCore.QSize(80, 50))
         font = QtGui.QFont()
         font.setPointSize(12)
+        font.setBold(True)
         self.deleteButton.setFont(font)
         self.deleteButton.setCursor(QtGui.QCursor(QtCore.Qt.CursorShape.PointingHandCursor))
         self.deleteButton.setObjectName("deleteButton")
@@ -643,7 +656,7 @@ class Ui_MainWindow(object):
         MainWindow.setWindowTitle(_translate("MainWindow", "MainWindow"))
         self.categoriesLabel.setText(_translate("MainWindow", "Categories"))
         self.splitsLabel.setText(_translate("MainWindow", "Splits"))
-        self.activeCategory.setText(_translate("MainWindow", "Active Category: <Category Name>"))
+        self.activeCategoryText.setText(_translate("MainWindow", "Active Category: "))
         self.setActiveButton.setText(_translate("MainWindow", "Set selected category as active"))
         self.label_name.setToolTip(_translate("MainWindow", "<html><head/><body><p>This is the name used to start a prediction via Twitch chat.</p><p>This name must be unique across all predictions of a certain category.</p></body></html>"))
         self.label_name.setText(_translate("MainWindow", "Name *"))
