@@ -1,8 +1,10 @@
 import sys
 import os
 import json
+from time import perf_counter
 
-from PyQt6.QtWidgets import QApplication, QMainWindow, QFileDialog, QPushButton, QSizePolicy, QLineEdit
+from PyQt6.QtWidgets import QApplication, QMainWindow, QFileDialog, QPushButton, QSizePolicy, QLineEdit, QMessageBox, QStyle
+from PyQt6.QtCore import Qt
 
 from prediction_window_ui import Ui_MainWindow
 from LiveSplitData import LiveSplitData
@@ -23,12 +25,28 @@ class Window(QMainWindow, Ui_MainWindow):
 
     def connectFunctions(self):
         self.actionOpen.triggered.connect(self.selectFile)
-        
         self.categoryList.itemClicked.connect(self.loadSplitList)
         self.splitList.itemSelectionChanged.connect(self.loadPredictionForm)
         self.setActiveButton.clicked.connect(self.setCategoryAsActive)
         self.saveButton.clicked.connect(self.savePrediction)
         self.deleteButton.clicked.connect(self.deletePrediction)
+
+        #on user change
+        self.field_name.textEdited.connect(self.inputChange)
+        self.field_autoStart.clicked.connect(self.inputChange)
+        self.field_title.textEdited.connect(self.inputChange)
+        self.field_outcome1.textEdited.connect(self.inputChange)
+        self.field_outcome2.textEdited.connect(self.inputChange)
+        self.field_outcome3.textEdited.connect(self.inputChange)
+        self.field_outcome4.textEdited.connect(self.inputChange)
+        self.field_outcome5.textEdited.connect(self.inputChange)
+        self.field_outcome6.textEdited.connect(self.inputChange)
+        self.field_outcome7.textEdited.connect(self.inputChange)
+        self.field_outcome8.textEdited.connect(self.inputChange)
+        self.field_outcome9.textEdited.connect(self.inputChange)
+        self.field_outcome10.textEdited.connect(self.inputChange)
+        self.field_window.textEdited.connect(self.inputChange)
+
 
 
     def checkAndLoadData(self):
@@ -78,7 +96,11 @@ class Window(QMainWindow, Ui_MainWindow):
 
             for cat in self.all_data['cats']:
                 if cat['category'] == subcategory:
-                    print("Category is already in the list of categories")
+                    msg = QMessageBox()
+                    msg.setIcon(QMessageBox.Icon.Warning)
+                    msg.setText("This category is already in the list")
+                    msg.setWindowTitle("Warning")
+                    msg.exec()
                     return
 
             # list of objects containing split name and empty object
@@ -142,7 +164,8 @@ class Window(QMainWindow, Ui_MainWindow):
                             self.populateFields(p=split['prediction'], split_name=split['split_name'])
                         else:
                             self.resetFields(split_name=split['split_name'])
-                                
+                        
+                        self.savedStatus.setText("Saved")   
                         break
                 break
 
@@ -158,6 +181,7 @@ class Window(QMainWindow, Ui_MainWindow):
             self.outcomes[i].setText(pred_outcome['title'])
 
         self.field_window.setText(str(p['data']['prediction_window']))
+
 
 
     def resetFields(self, split_name=''):
@@ -183,9 +207,55 @@ class Window(QMainWindow, Ui_MainWindow):
         pass
 
 
+    def inputChange(self):
+        self.savedStatus.setText("Unsaved")    
+
+
     def savePrediction(self):
-        pass
-        self.validateForm()
+        formIsValid = self.validateForm()
+
+        if formIsValid:
+            # save form
+            all_cats: list = self.all_data['cats']
+
+            for cat in all_cats:
+                if cat['category'] == self.categoryList.currentItem().text():
+                    for split in cat['split_names']:
+                        if split['split_name'] == self.splitList.currentItem().text():
+
+                            new_prediction = {
+                                'auto_predict': {
+                                    'auto_start': self.field_autoStart.isChecked(),
+                                    'split_name': self.field_splitName.text()
+                                },
+                                'data': {
+                                    'broadcaster_id': '',
+                                    'outcomes': [],
+                                    'prediction_window': int(self.field_window.text()),
+                                    'title': self.field_title.text(),
+                                },
+                                'name': self.field_name.text(),
+                            }
+
+                            for outcome in self.outcomes:
+                                if outcome.text() != '':
+                                    new_prediction['data']['outcomes'].append(
+                                        {
+                                            'title': outcome.text()
+                                        }
+                                    )
+
+                            split['prediction'] = new_prediction
+                            break
+                    break
+
+            self.save_all_data()
+            self.savedStatus.setText('Saved')
+
+
+    def save_all_data(self):
+        with open('predictions/all_data.json', 'w') as file:
+            file.write(json.dumps(self.all_data))
 
 
     def deletePrediction(self):
@@ -193,7 +263,58 @@ class Window(QMainWindow, Ui_MainWindow):
 
     
     def validateForm(self):
-        pass
+        # split name always filled in, no need to validate
+        name = self.field_name.text()
+        title = self.field_title.text()
+        
+        # name
+        if len(name.split()) != 1:
+            msg = QMessageBox()
+            msg.setIcon(QMessageBox.Icon.Warning)
+            msg.setText("Name must be one word")
+            msg.setWindowTitle("Invalid name")
+            msg.exec()
+            return 0
+
+        # title
+        if title == '':
+            msg = QMessageBox()
+            msg.setIcon(QMessageBox.Icon.Warning)
+            msg.setText("Must set a title")
+            msg.setWindowTitle("No title")
+            msg.exec()
+            return 0
+
+        # outcomes
+        outcome_counter = 0
+        for outcome in self.outcomes:
+            if outcome.text() != '':
+                outcome_counter += 1
+        
+        if outcome_counter < 2:
+            msg = QMessageBox()
+            msg.setIcon(QMessageBox.Icon.Warning)
+            msg.setText("Must have at least 2 outcomes")
+            msg.setWindowTitle("Not enough outcomes")
+            msg.exec()
+            return 0
+
+        # window
+        try:
+            window = int(self.field_window.text())
+            if not 30 <= window <= 1800:
+                raise ValueError
+        except ValueError:
+            msg = QMessageBox()
+            msg.setIcon(QMessageBox.Icon.Warning)
+            msg.setText("Window must be a number between 30 and 1800")
+            msg.setWindowTitle("Invalid value")
+            msg.exec()
+            return 0
+        
+        return 1
+        
+        
 
 
 if __name__ == '__main__':
