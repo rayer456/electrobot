@@ -163,7 +163,7 @@ class Window(QMainWindow, Ui_MainWindow):
                             self.resetFields()
                             self.populateFields(p=split['prediction'], split_name=split['split_name'])
                         else:
-                            self.resetFields(split_name=split['split_name'])
+                            self.resetFields()
                         
                         self.savedStatus.setText("Saved")   
                         break
@@ -184,10 +184,10 @@ class Window(QMainWindow, Ui_MainWindow):
 
 
 
-    def resetFields(self, split_name=''):
+    def resetFields(self):
         self.field_name.clear()
         self.field_autoStart.setChecked(True)
-        self.field_splitName.setText(split_name)
+        self.field_splitName.setText(self.splitList.currentItem().text())
         self.field_title.clear()
         self.field_outcome1.clear()
         self.field_outcome2.clear()
@@ -253,13 +253,26 @@ class Window(QMainWindow, Ui_MainWindow):
             self.savedStatus.setText('Saved')
 
 
+    def deletePrediction(self):
+        selected_cat = self.categoryList.currentItem().text()
+        selected_split = self.splitList.currentItem().text()
+
+        for cat in self.all_data['cats']:
+            if cat['category'] == selected_cat:
+                for split in cat['split_names']:
+                    if split['split_name'] == selected_split:
+                        split['prediction'] = {}
+                        break
+                break
+
+        self.resetFields()
+        self.savedStatus.setText('Deleted')
+        self.save_all_data()
+
+
     def save_all_data(self):
         with open('predictions/all_data.json', 'w') as file:
             file.write(json.dumps(self.all_data))
-
-
-    def deletePrediction(self):
-        pass
 
     
     def validateForm(self):
