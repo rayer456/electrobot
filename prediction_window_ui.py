@@ -477,13 +477,11 @@ class Ui_MainWindow(object):
         font = QtGui.QFont()
         font.setPointSize(11)
         self.field_splitName.setFont(font)
-        self.field_splitName.setCursor(QtGui.QCursor(QtCore.Qt.CursorShape.ForbiddenCursor))
-        self.field_splitName.setFocusPolicy(QtCore.Qt.FocusPolicy.NoFocus)
+        self.field_splitName.setCursor(QtGui.QCursor(QtCore.Qt.CursorShape.IBeamCursor))
+        self.field_splitName.setFocusPolicy(QtCore.Qt.FocusPolicy.StrongFocus)
         self.field_splitName.setToolTip("")
-        self.field_splitName.setStyleSheet("QLineEdit{\n"
-"    background: lightgray;\n"
-"}")
-        self.field_splitName.setReadOnly(True)
+        self.field_splitName.setStyleSheet("")
+        self.field_splitName.setReadOnly(False)
         self.field_splitName.setObjectName("field_splitName")
         self.fieldLayout.addWidget(self.field_splitName)
         spacerItem1 = QtWidgets.QSpacerItem(20, 40, QtWidgets.QSizePolicy.Policy.Minimum, QtWidgets.QSizePolicy.Policy.Maximum)

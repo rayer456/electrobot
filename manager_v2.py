@@ -253,7 +253,7 @@ class Window(QMainWindow, Ui_MainWindow):
 
     def savePrediction(self):
         try:
-            selected_split = self.splitList.currentItem().text()
+            old_selected_split = self.splitList.currentItem().text()
         except AttributeError:
             msg = QMessageBox()
             msg.setIcon(QMessageBox.Icon.Warning)
@@ -262,17 +262,19 @@ class Window(QMainWindow, Ui_MainWindow):
             msg.exec()
             return
         
-        formIsValid = self.validateForm()
+        formIsValid = self.validateForm(old_selected_split)
 
         if formIsValid:
             all_cats: list = self.all_data['cats']
             selected_cat = self.categoryList.currentItem().text()
-
+            selected_split = self.splitList.currentItem().text()
+            
             for cat in all_cats:
                 if cat['category'] == selected_cat:
                     for split in cat['split_names']:
-                        if split['split_name'] == selected_split:
-
+                        if split['split_name'] == old_selected_split:
+                            # replace split name
+                            split['split_name'] = selected_split
                             new_prediction = {
                                 'auto_predict': {
                                     'auto_start': self.field_autoStart.isChecked(),
@@ -362,10 +364,11 @@ class Window(QMainWindow, Ui_MainWindow):
             file.write(json.dumps(predictions))
 
     
-    def validateForm(self) -> bool:
-        # split name always filled in, no need to validate
+    def validateForm(self, selected_split) -> bool:
+
         name = self.field_name.text()
         title = self.field_title.text()
+        splitName = self.field_splitName.text()
         
         # name
         if len(name.split()) != 1:
@@ -380,10 +383,28 @@ class Window(QMainWindow, Ui_MainWindow):
         if title == '':
             msg = QMessageBox()
             msg.setIcon(QMessageBox.Icon.Warning)
-            msg.setText("Must set a title")
+            msg.setText("Must set a Title")
             msg.setWindowTitle("No title")
             msg.exec()
             return 0
+        
+        # split name
+        if splitName == '':
+            msg = QMessageBox()
+            msg.setIcon(QMessageBox.Icon.Warning)
+            msg.setText("Must set a Split name")
+            msg.setWindowTitle("No Split name")
+            msg.exec()
+            return 0
+        
+        if splitName != selected_split:
+            choice = QMessageBox().question(self, 'Difference detected', f'Field Split Name is different than the one in the splits. \n\nDo you want to replace the split name in the splits with the Split Name field? (Probably yes) \n{selected_split} --> {splitName}')
+
+            if choice == QMessageBox.StandardButton.Yes:
+                self.splitList.currentItem().setText(splitName)
+            else:
+                self.field_splitName.setText(selected_split)
+                return 0
 
         # outcomes
         outcome_counter = 0

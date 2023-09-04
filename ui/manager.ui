@@ -975,21 +975,19 @@ QListWidget::item:hover {
                </font>
               </property>
               <property name="cursor">
-               <cursorShape>ForbiddenCursor</cursorShape>
+               <cursorShape>IBeamCursor</cursorShape>
               </property>
               <property name="focusPolicy">
-               <enum>Qt::NoFocus</enum>
+               <enum>Qt::StrongFocus</enum>
               </property>
               <property name="toolTip">
                <string/>
               </property>
               <property name="styleSheet">
-               <string notr="true">QLineEdit{
-	background: lightgray;
-}</string>
+               <string notr="true"/>
               </property>
               <property name="readOnly">
-               <bool>true</bool>
+               <bool>false</bool>
               </property>
              </widget>
             </item>
