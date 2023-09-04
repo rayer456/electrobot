@@ -422,6 +422,31 @@ QListWidget::item:hover {
          </widget>
         </item>
         <item>
+         <widget class="QLabel" name="savedStatus">
+          <property name="maximumSize">
+           <size>
+            <width>16777215</width>
+            <height>16</height>
+           </size>
+          </property>
+          <property name="font">
+           <font>
+            <pointsize>12</pointsize>
+            <bold>true</bold>
+            <underline>false</underline>
+           </font>
+          </property>
+          <property name="styleSheet">
+           <string notr="true">QLabel {
+	color: green;
+}</string>
+          </property>
+          <property name="text">
+           <string>Status: Saved</string>
+          </property>
+         </widget>
+        </item>
+        <item>
          <layout class="QHBoxLayout" name="formLayout">
           <property name="leftMargin">
            <number>0</number>
@@ -1244,15 +1269,15 @@ QListWidget::item:hover {
          </layout>
         </item>
         <item>
-         <layout class="QHBoxLayout" name="buttonLayout" stretch="0,0,0">
+         <layout class="QHBoxLayout" name="buttonLayout" stretch="0,0">
           <property name="spacing">
-           <number>0</number>
+           <number>40</number>
           </property>
           <property name="sizeConstraint">
            <enum>QLayout::SetDefaultConstraint</enum>
           </property>
           <property name="rightMargin">
-           <number>0</number>
+           <number>120</number>
           </property>
           <item>
            <widget class="QPushButton" name="saveButton">
@@ -1319,37 +1344,6 @@ QListWidget::item:hover {
             </property>
             <property name="text">
              <string>Delete</string>
-            </property>
-           </widget>
-          </item>
-          <item>
-           <widget class="QLabel" name="savedStatus">
-            <property name="sizePolicy">
-             <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
-              <horstretch>0</horstretch>
-              <verstretch>0</verstretch>
-             </sizepolicy>
-            </property>
-            <property name="maximumSize">
-             <size>
-              <width>80</width>
-              <height>16777215</height>
-             </size>
-            </property>
-            <property name="font">
-             <font>
-              <pointsize>14</pointsize>
-              <bold>true</bold>
-             </font>
-            </property>
-            <property name="styleSheet">
-             <string notr="true">QLabel {
-	color: hotpink;
-	font-weight: bold;
-}</string>
-            </property>
-            <property name="text">
-             <string>Saved</string>
             </property>
            </widget>
           </item>

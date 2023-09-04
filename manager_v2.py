@@ -2,7 +2,8 @@ import sys
 import os
 import json
 
-from PyQt6.QtWidgets import QApplication, QMainWindow, QFileDialog, QMessageBox
+from PyQt6.QtWidgets import QApplication, QMainWindow, QFileDialog, QMessageBox, QListWidgetItem
+from PyQt6.QtGui import QIcon
 
 from prediction_window_ui import Ui_MainWindow
 from LiveSplitData import LiveSplitData
@@ -17,13 +18,13 @@ class Window(QMainWindow, Ui_MainWindow):
 
         self.checkAndLoadData()
         self.listOutcomes()
-        self.loadCatList()
+        self.refreshCatList()
         self.setActiveCategory(clicked=False)
 
         
     def connectFunctions(self):
         self.actionOpen.triggered.connect(self.selectFile)
-        self.categoryList.itemClicked.connect(self.loadSplitList)
+        self.categoryList.itemClicked.connect(lambda: self.refreshSplitList())
         self.splitList.itemSelectionChanged.connect(self.loadPredictionForm)
         self.setActiveButton.clicked.connect(lambda: self.setActiveCategory(clicked=True))
         self.saveButton.clicked.connect(self.savePrediction)
@@ -32,6 +33,7 @@ class Window(QMainWindow, Ui_MainWindow):
         #on user edit
         self.field_name.textEdited.connect(self.inputChange)
         self.field_autoStart.clicked.connect(self.inputChange)
+        self.field_splitName.textEdited.connect(self.inputChange)
         self.field_title.textEdited.connect(self.inputChange)
         self.field_outcome1.textEdited.connect(self.inputChange)
         self.field_outcome2.textEdited.connect(self.inputChange)
@@ -76,25 +78,36 @@ class Window(QMainWindow, Ui_MainWindow):
         self.outcomes.append(self.field_outcome10)
 
 
-    def loadCatList(self):
+    def refreshCatList(self, setIndexTo=0):
         self.categoryList.clear()
+
         for cat in self.all_data['cats']:
-            self.categoryList.addItem(cat['category'])
-            self.categoryList.setCurrentRow(0)
-            self.loadSplitList()
+            catRow = QListWidgetItem(cat['category'])
+            if cat['active']:
+                catRow.setIcon(QIcon('assets/star.png'))
+
+            self.categoryList.addItem(catRow)
+
+        self.categoryList.setCurrentRow(setIndexTo)
+        if len(self.all_data['cats']) > 0:
+            self.refreshSplitList()
 
     
-    def loadSplitList(self):
+    def refreshSplitList(self, setIndexTo=0):
         self.splitList.clear()
         selected_cat = self.categoryList.currentItem().text()
 
         for cat in self.all_data['cats']:
             if cat['category'] == selected_cat:
                 for split in cat['split_names']:
-                    self.splitList.addItem(split['split_name'])
+                    splitRow = QListWidgetItem(split['split_name'])
+                    if split['prediction']:
+                        splitRow.setIcon(QIcon('assets/star.png'))
+                    
+                    self.splitList.addItem(splitRow)
                 break
 
-        self.splitList.setCurrentRow(0)
+        self.splitList.setCurrentRow(setIndexTo)
 
 
     def setActiveCategory(self, clicked):
@@ -125,9 +138,10 @@ class Window(QMainWindow, Ui_MainWindow):
                 else:
                     self.activeCategory = None
             
-            self.activeCategoryText.setText(f'Active Category: {self.activeCategory}')
-            
+            self.activeCategoryText.setText(f'Active Category: {self.activeCategory}')         
+
             if clicked:
+                self.refreshCatList(setIndexTo=self.categoryList.currentRow())
                 self.save_all_data()
                 self.saveToPredFile()
 
@@ -174,7 +188,7 @@ class Window(QMainWindow, Ui_MainWindow):
             self.all_data['cats'].append(new_cat)
         
         self.save_all_data()
-        self.loadCatList()
+        self.refreshCatList()
 
 
     def loadPredictionForm(self):
@@ -191,7 +205,10 @@ class Window(QMainWindow, Ui_MainWindow):
                         if split['prediction']: # if prediction present
                             self.populateFields(split['prediction'], selected_split)
 
-                        self.savedStatus.setText('Saved')   
+                        self.savedStatus.setText('Status: Saved')
+                        self.savedStatus.setStyleSheet("QLabel {\n"
+                        "    color: darkgreen;\n"
+                        "}")
                         break
                 break
 
@@ -228,7 +245,10 @@ class Window(QMainWindow, Ui_MainWindow):
 
 
     def inputChange(self):
-        self.savedStatus.setText("Unsaved")    
+        self.savedStatus.setText("Status: Unsaved")    
+        self.savedStatus.setStyleSheet("QLabel {\n"
+        "    color: orange;\n"
+        "}")
 
 
     def savePrediction(self):
@@ -278,9 +298,13 @@ class Window(QMainWindow, Ui_MainWindow):
                             split['prediction'] = new_prediction
                             break
                     break
-
+            
+            self.refreshSplitList(self.splitList.currentRow())
             self.save_all_data()
-            self.savedStatus.setText('Saved')
+            self.savedStatus.setText('Status: Saved')
+            self.savedStatus.setStyleSheet("QLabel {\n"
+            "    color: darkgreen;\n"
+            "}")
             if self.activeCategory == selected_cat:
                 self.saveToPredFile()
 
@@ -306,10 +330,14 @@ class Window(QMainWindow, Ui_MainWindow):
                 break
 
         self.resetFields()
+        self.refreshSplitList(self.splitList.currentRow())
         self.save_all_data()
         if self.activeCategory == selected_cat:
             self.saveToPredFile()
-        self.savedStatus.setText('Deleted')
+        self.savedStatus.setText('Status: Deleted')
+        self.savedStatus.setStyleSheet("QLabel {\n"
+        "    color: darkred;\n"
+        "}")
 
 
     def save_all_data(self):
@@ -334,7 +362,7 @@ class Window(QMainWindow, Ui_MainWindow):
             file.write(json.dumps(predictions))
 
     
-    def validateForm(self):
+    def validateForm(self) -> bool:
         # split name always filled in, no need to validate
         name = self.field_name.text()
         title = self.field_title.text()
