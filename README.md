@@ -55,13 +55,13 @@ Here you can create predictions for every split for multiple categories
 
 <img src="assets/manager_v2.png" alt="predictions manager" title="predictions manager" width=599 height=500 >
 
-**Add one or more categories:** click top left on File > Open and select 1 or more .lss files
+- **Add one or more categories:** click top left on File > Open and select 1 or more .lss files
 
-**Add or edit a prediction:** select your desired category/split, fill in the form and click Save Prediction
+- **Add or edit a prediction:** select your desired category/split, fill in the form and click Save Prediction
 
-**Delete a prediction:** select your desired category/split and click Delete
+- **Delete a prediction:** select your desired category/split and click Delete
 
-**Make a category's predictions active:** select your desired category and click the blue button
+- **Make a category's predictions active:** select your desired category and click the blue button
 
 The yellow stars indicate which category is active and which splits have predictions respectively.
 
