@@ -31,7 +31,7 @@ class Window(QMainWindow, Ui_MainWindow):
         self.deleteButton.clicked.connect(self.deletePrediction)
         self.removeCatButton.clicked.connect(self.removeSelectedCategory)
 
-        #on user edit
+        # on user edit
         self.field_name.textEdited.connect(self.inputChange)
         self.field_autoStart.clicked.connect(self.inputChange)
         self.field_splitName.textEdited.connect(self.inputChange)
@@ -171,7 +171,7 @@ class Window(QMainWindow, Ui_MainWindow):
         namesToAdd, catsToAdd = [], []
 
         for path in paths:
-            lsd = LiveSplitData(path=path)
+            lsd = LiveSplitData(path)
             subcategory = lsd.get_subcategory()
 
             for name in namesToAdd:
@@ -385,7 +385,6 @@ class Window(QMainWindow, Ui_MainWindow):
 
     
     def validateForm(self, selected_split) -> bool:
-
         name = self.field_name.text()
         title = self.field_title.text()
         splitName = self.field_splitName.text()
@@ -470,7 +469,6 @@ class Window(QMainWindow, Ui_MainWindow):
 
     def removeSelectedCategory(self):
         selected = self.categoryList.currentRow()
-
         try:
             selected_cat = self.categoryList.currentItem().text()
         except AttributeError:
@@ -482,7 +480,6 @@ class Window(QMainWindow, Ui_MainWindow):
                 return
     
         self.categoryList.takeItem(selected)
-
         activeCat = False
         for i, cat in enumerate(self.all_data['cats']):
             if cat['category'] == selected_cat:
@@ -496,7 +493,6 @@ class Window(QMainWindow, Ui_MainWindow):
         self.save_all_data()
         if activeCat:
             self.saveToPredFile()
-
 
 
 if __name__ == '__main__':

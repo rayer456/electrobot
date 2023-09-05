@@ -10,6 +10,8 @@ import multiprocessing as mp
 import select
 import datetime
 from operator import itemgetter
+import global_hotkeys as hkeys
+
 from config import config_file as CFG
 import predictions
 import logger as LOG
@@ -222,6 +224,12 @@ def read_data():
     mods = get_mods()
     pred_is_active = False
 
+    # hotkeys
+    bindings = get_hotkeys()
+    hkeys.register_hotkeys(bindings)
+    hkeys.start_checking_hotkeys()
+    LOG.logger.info('Hotkeys registered')
+
     while True: 
         try: 
             select.select([IRC], [], [], 4)
@@ -273,6 +281,7 @@ def read_data():
                 send_data(f"PONG {msg[1]}")
             elif msg[1] == "PRIVMSG": #TODO commands, modcommands, song, pb, wr
                 chat_interact(buffer.splitlines(), mods)
+
         except ssl.SSLWantReadError: #timeout
             continue
         except KeyboardInterrupt:
@@ -282,7 +291,68 @@ def read_data():
             LOG.logger.error("Exception in read_data", exc_info=True)
         
 
-def chat_interact(buffer, mods):
+def get_hotkeys() -> list:
+    while True:
+        try:
+            with open('config/bindings.json', 'r') as file:
+                bindings = json.load(file)
+            
+            hotkeys = [{
+                'hotkey': binding['hotkey'],
+                'on_press_callback': use_hotkeys,
+                'on_release_callback': None,
+                'actuate_on_partial_release': False,
+                'callback_params': binding['action']
+            } for binding in bindings]
+
+            return hotkeys
+        
+        except FileNotFoundError:
+            default_bindings = [
+                {
+                    'hotkey': 'control + 1',
+                    'action': 'resolve 1',
+                },
+                {
+                    'hotkey': 'control + 2',
+                    'action': 'resolve 2',
+                },
+                {
+                    'hotkey': 'control + 3',
+                    'action': 'resolve 3',
+                },
+                {
+                    'hotkey': 'control + 4',
+                    'action': 'resolve 4',
+                },
+                {
+                    'hotkey': 'control + 5',
+                    'action': 'lock',
+                },
+                {
+                    'hotkey': 'control + 6',
+                    'action': 'cancel',
+                },
+            ]
+            with open('config/bindings.json', 'w') as file:
+                file.write(json.dumps(default_bindings))
+
+
+def use_hotkeys(action: str):
+    response = None
+    match action.split():
+        case ['lock']:
+            response = end_prediction("LOCK")
+        case ['resolve', outcome]:
+            response = resolve_prediction(int(outcome))
+        case ['cancel']:
+            response = end_prediction("CANCEL")
+
+    if response != None: 
+        send_data(f"PRIVMSG {CHANNEL} :{response}")
+
+
+def chat_interact(buffer, mods): 
     for i in buffer: #possibly multiple messages
         username = i[i.find(':')+1:i.find('!')]
         chat_msg = i[i.find(':', 1)+1:]
@@ -302,7 +372,8 @@ def chat_interact(buffer, mods):
                 case ["!modcommands"]:
                     response = "pred start <name>, pred lock, pred outcome <1-10>, pred cancel"
 
-            if response != None: send_data(f"PRIVMSG {CHANNEL} :{response}")
+            if response != None: 
+                send_data(f"PRIVMSG {CHANNEL} :{response}")
 
 
 def update_latest_prediction():
