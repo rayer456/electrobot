@@ -1,6 +1,6 @@
 # electrobot
 
-Twitch chat bot that among other things manages predictions via chat commands and starts predictions based on Livesplit.
+Twitch chat bot that manages predictions via chat commands and starts predictions based on Livesplit. Now with hotkey support.
 
 # Prerequisites
 
@@ -11,8 +11,8 @@ Twitch chat bot that among other things manages predictions via chat commands an
 
 # Installation
 
-1. Download **electrobot.zip** from the [latest release](https://github.com/electrorayer/electrobot/releases) and extract.
-2. Run the following cmd command in the extracted folder:
+1. Download the [latest release](https://github.com/electrorayer/electrobot/releases) and extract.
+2. Install the necessary dependencies in the extracted folder:
 
     ```
     pip install -r requirements.txt
@@ -49,19 +49,33 @@ Open the `config` folder.
 
 ## Managing predictions
 
-Run `predictions_manager.pyw`
+Run `manager_v2.pyw`
 
-In this simple GUI you can manage a list of "pre-made" predictions that the bot can start either by Livesplit (tick Auto start) or chat command.
+Here you can create predictions for every split for multiple categories
 
-<img src="assets/predictions_manager.png" alt="predictions manager" title="predictions manager" height=420 width=460>
+<img src="assets/manager_v2.png" alt="predictions manager" title="predictions manager" width=599 height=500 >
 
-**To add a prediction:** change the Name field and other fields, save 
+**Add one or more categories:** click top left on File > Open and select 1 or more .lss files
 
-**To edit an existing prediction:** change anything but the Name field and save
- 
-**To edit the name of an existing prediction:** create a new one and delete the old one
+**Add or edit a prediction:** select your desired category/split, fill in the form and click Save Prediction
 
-**To delete a prediction:** select the prediction you want deleted and click delete
+**Delete a prediction:** select your desired category/split and click Delete
+
+**Make a category's predictions active:** select your desired category and click the blue button
+
+The yellow stars indicate which category is active and which splits have predictions respectively.
+
+*If you add splits often and you want to add a prediction for those splits you can rename any split in the `Splits` list to that split and make the prediction that way. The order or missing splits is irrelevant. The split list is more of a convenience feature. And if you want a prediction for every split well :(
+
+## Hotkeys
+
+When you first successfully run `electrobot.py` a bindings file will be created in `config/bindings.json` with some default hotkeys to perform below actions.
+
+- Close a prediction
+- Cancel a prediction
+- Select an outcome <1-10> *by default only the first four outcomes are made into a hotkey. You can go all the way up to 10 by just copy pasting the objects in the file.
+
+- You can change the actual keys you press by editing the `hotkey` field. [List of available keys](https://github.com/btsdev/global_hotkeys#list-of-the-available-keys)
 
 # Usage
 
@@ -79,9 +93,9 @@ You can make predictions start automatically based on Livesplit splits by using 
 
 Make sure to start Livesplit Server **before** you start the bot.
 
-If you added predictions with `predictions_manager.pyw` a prediction should start when the given split name starts. 
+If you added predictions with `manager_v2.pyw` a prediction should start when the given split name starts. 
 
-The default port on which Livesplit Server runs is 16834, if you use a different port, you must also change the port in `config.toml` under `[livesplit]`.
+The default port on which Livesplit Server runs is 16834, if you're using a different port, you must also change the port in `config.toml` under `[livesplit]`.
 
 ## Starting the bot
 
@@ -89,7 +103,7 @@ Run `electrobot.py`
 
 If all was configured correctly you should see this:
 
-- ![](/assets/example.png)
+- <img src="assets/example.png" alt="predictions manager" title="predictions manager" width=519 height=270 >
 
 **Chat commands:**
 
