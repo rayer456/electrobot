@@ -12,7 +12,7 @@ from PyQt6 import QtCore, QtGui, QtWidgets
 class Ui_MainWindow(object):
     def setupUi(self, MainWindow):
         MainWindow.setObjectName("MainWindow")
-        MainWindow.resize(900, 676)
+        MainWindow.resize(900, 698)
         sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Policy.Maximum, QtWidgets.QSizePolicy.Policy.Fixed)
         sizePolicy.setHorizontalStretch(0)
         sizePolicy.setVerticalStretch(0)
@@ -151,6 +151,35 @@ class Ui_MainWindow(object):
         self.categoryList.setSelectionRectVisible(False)
         self.categoryList.setObjectName("categoryList")
         self.categoriesLayout.addWidget(self.categoryList)
+        self.removeCatButton = QtWidgets.QPushButton(parent=self.centralwidget)
+        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Policy.Fixed, QtWidgets.QSizePolicy.Policy.Fixed)
+        sizePolicy.setHorizontalStretch(0)
+        sizePolicy.setVerticalStretch(0)
+        sizePolicy.setHeightForWidth(self.removeCatButton.sizePolicy().hasHeightForWidth())
+        self.removeCatButton.setSizePolicy(sizePolicy)
+        self.removeCatButton.setMinimumSize(QtCore.QSize(80, 50))
+        self.removeCatButton.setMaximumSize(QtCore.QSize(200, 50))
+        font = QtGui.QFont()
+        font.setPointSize(12)
+        font.setBold(True)
+        self.removeCatButton.setFont(font)
+        self.removeCatButton.setCursor(QtGui.QCursor(QtCore.Qt.CursorShape.PointingHandCursor))
+        self.removeCatButton.setStyleSheet("#removeCatButton {\n"
+"    background-color: #a10000;\n"
+"    color: white;\n"
+"    width: 100px;\n"
+"    border-radius: 12px;\n"
+"    outline: 0;\n"
+"}\n"
+"\n"
+"\n"
+"#removeCatButton:hover {\n"
+"    background-color: red;\n"
+"    color: white;\n"
+"    font-weight: bold;\n"
+"}")
+        self.removeCatButton.setObjectName("removeCatButton")
+        self.categoriesLayout.addWidget(self.removeCatButton)
         self.mainLayout.addLayout(self.categoriesLayout)
         self.splitLayout = QtWidgets.QVBoxLayout()
         self.splitLayout.setContentsMargins(-1, 0, 0, 0)
@@ -648,6 +677,8 @@ class Ui_MainWindow(object):
         _translate = QtCore.QCoreApplication.translate
         MainWindow.setWindowTitle(_translate("MainWindow", "MainWindow"))
         self.categoriesLabel.setText(_translate("MainWindow", "Categories"))
+        self.categoryList.setSortingEnabled(False)
+        self.removeCatButton.setText(_translate("MainWindow", "Remove Category"))
         self.splitsLabel.setText(_translate("MainWindow", "Splits"))
         self.activeCategoryText.setText(_translate("MainWindow", "Active Category: "))
         self.setActiveButton.setText(_translate("MainWindow", "Set selected category as active"))

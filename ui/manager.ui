@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>900</width>
-    <height>676</height>
+    <height>698</height>
    </rect>
   </property>
   <property name="sizePolicy">
@@ -238,6 +238,59 @@ QListWidget:item:hover {
           </property>
           <property name="selectionRectVisible">
            <bool>false</bool>
+          </property>
+          <property name="sortingEnabled">
+           <bool>false</bool>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QPushButton" name="removeCatButton">
+          <property name="sizePolicy">
+           <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+            <horstretch>0</horstretch>
+            <verstretch>0</verstretch>
+           </sizepolicy>
+          </property>
+          <property name="minimumSize">
+           <size>
+            <width>80</width>
+            <height>50</height>
+           </size>
+          </property>
+          <property name="maximumSize">
+           <size>
+            <width>200</width>
+            <height>50</height>
+           </size>
+          </property>
+          <property name="font">
+           <font>
+            <pointsize>12</pointsize>
+            <bold>true</bold>
+           </font>
+          </property>
+          <property name="cursor">
+           <cursorShape>PointingHandCursor</cursorShape>
+          </property>
+          <property name="styleSheet">
+           <string notr="true">#removeCatButton {
+	background-color: #a10000;
+	color: white;
+	width: 100px;
+	border-radius: 12px;
+	outline: 0;
+}
+
+
+#removeCatButton:hover {
+	background-color: red;
+	color: white;
+	font-weight: bold;
+}</string>
+          </property>
+          <property name="text">
+           <string>Remove Category</string>
           </property>
          </widget>
         </item>

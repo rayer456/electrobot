@@ -19,16 +19,17 @@ class Window(QMainWindow, Ui_MainWindow):
         self.checkAndLoadData()
         self.listOutcomes()
         self.refreshCatList()
-        self.setActiveCategory(clicked=False)
+        self.setActiveCategory()
 
         
     def connectFunctions(self):
         self.actionOpen.triggered.connect(self.selectFile)
         self.categoryList.itemClicked.connect(lambda: self.refreshSplitList())
         self.splitList.itemSelectionChanged.connect(self.loadPredictionForm)
-        self.setActiveButton.clicked.connect(lambda: self.setActiveCategory(clicked=True))
+        self.setActiveButton.clicked.connect(lambda: self.setActiveCategory(setActive=True))
         self.saveButton.clicked.connect(self.savePrediction)
         self.deleteButton.clicked.connect(self.deletePrediction)
+        self.removeCatButton.clicked.connect(self.removeSelectedCategory)
 
         #on user edit
         self.field_name.textEdited.connect(self.inputChange)
@@ -78,7 +79,7 @@ class Window(QMainWindow, Ui_MainWindow):
         self.outcomes.append(self.field_outcome10)
 
 
-    def refreshCatList(self, setIndexTo=0):
+    def refreshCatList(self, setIndexTo=0, activeClicked=False):
         self.categoryList.clear()
 
         for cat in self.all_data['cats']:
@@ -90,7 +91,14 @@ class Window(QMainWindow, Ui_MainWindow):
 
         self.categoryList.setCurrentRow(setIndexTo)
         if len(self.all_data['cats']) > 0:
-            self.refreshSplitList()
+            if activeClicked:
+                self.refreshSplitList(self.splitList.currentRow())
+            else:
+                self.refreshSplitList()
+        else:
+            self.splitList.blockSignals(True)
+            self.splitList.clear()
+            self.splitList.blockSignals(False)
 
     
     def refreshSplitList(self, setIndexTo=0):
@@ -110,9 +118,9 @@ class Window(QMainWindow, Ui_MainWindow):
         self.splitList.setCurrentRow(setIndexTo)
 
 
-    def setActiveCategory(self, clicked):
+    def setActiveCategory(self, setActive=False):
             # replace existing one
-            if hasattr(self, 'activeCategory'):
+            if hasattr(self, 'activeCategory') and setActive:
                 try:
                     self.activeCategory = self.categoryList.currentItem().text()
                 except AttributeError:
@@ -140,8 +148,8 @@ class Window(QMainWindow, Ui_MainWindow):
             
             self.activeCategoryText.setText(f'Active Category: {self.activeCategory}')         
 
-            if clicked:
-                self.refreshCatList(setIndexTo=self.categoryList.currentRow())
+            if setActive:
+                self.refreshCatList(self.categoryList.currentRow(), activeClicked=True)
                 self.save_all_data()
                 self.saveToPredFile()
 
@@ -152,18 +160,28 @@ class Window(QMainWindow, Ui_MainWindow):
             caption='Select one or more Livesplit files',
             filter='*.lss'
         )
-        for path in paths:
-            if path == '':
-                return
+
+        if len(paths) == 0:
+            return
 
         self.add_cats_to_datafile(paths)
 
 
     def add_cats_to_datafile(self, paths: list):
+        namesToAdd, catsToAdd = [], []
+
         for path in paths:
             lsd = LiveSplitData(path=path)
             subcategory = lsd.get_subcategory()
 
+            for name in namesToAdd:
+                if name == subcategory:
+                    msg = QMessageBox()
+                    msg.setIcon(QMessageBox.Icon.Warning)
+                    msg.setText(f"Can't add {subcategory} more than once")
+                    msg.setWindowTitle("Warning")
+                    msg.exec()
+                    return
             for cat in self.all_data['cats']:
                 if cat['category'] == subcategory:
                     msg = QMessageBox()
@@ -172,7 +190,7 @@ class Window(QMainWindow, Ui_MainWindow):
                     msg.setWindowTitle("Warning")
                     msg.exec()
                     return
-
+            
             # list of objects each containing split name and empty prediction
             splits_with_preds = [{
                 'split_name': split_name,
@@ -185,8 +203,10 @@ class Window(QMainWindow, Ui_MainWindow):
                 'split_names': splits_with_preds
             }
 
-            self.all_data['cats'].append(new_cat)
+            namesToAdd.append(subcategory)
+            catsToAdd.append(new_cat)
         
+        self.all_data['cats'].extend(catsToAdd)
         self.save_all_data()
         self.refreshCatList()
 
@@ -401,6 +421,19 @@ class Window(QMainWindow, Ui_MainWindow):
             choice = QMessageBox().question(self, 'Difference detected', f'Field Split Name is different than the one in the splits. \n\nDo you want to replace the split name in the splits with the Split Name field? (Probably yes) \n{selected_split} --> {splitName}')
 
             if choice == QMessageBox.StandardButton.Yes:
+                # duplicate split name
+                for cat in self.all_data['cats']:
+                    if cat['category'] == self.categoryList.currentItem().text():
+                        for split in cat['split_names']:
+                            if split['split_name'] == splitName:
+                                msg = QMessageBox()
+                                msg.setIcon(QMessageBox.Icon.Warning)
+                                msg.setText("Can't have duplicate split names")
+                                msg.setWindowTitle("Duplicate split name")
+                                msg.exec()
+                                self.field_splitName.setText(selected_split)
+                                return 0
+
                 self.splitList.currentItem().setText(splitName)
             else:
                 self.field_splitName.setText(selected_split)
@@ -434,7 +467,37 @@ class Window(QMainWindow, Ui_MainWindow):
             return 0
     
         return 1
-        
+
+    def removeSelectedCategory(self):
+        selected = self.categoryList.currentRow()
+
+        try:
+            selected_cat = self.categoryList.currentItem().text()
+        except AttributeError:
+                msg = QMessageBox()
+                msg.setIcon(QMessageBox.Icon.Warning)
+                msg.setText("No category selected")
+                msg.setWindowTitle("Warning")
+                msg.exec()
+                return
+    
+        self.categoryList.takeItem(selected)
+
+        activeCat = False
+        for i, cat in enumerate(self.all_data['cats']):
+            if cat['category'] == selected_cat:
+                if cat['active']:
+                    activeCat = True
+                self.all_data['cats'].pop(i)
+                break
+
+        self.refreshCatList()
+        self.setActiveCategory()
+        self.save_all_data()
+        if activeCat:
+            self.saveToPredFile()
+
+
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)
