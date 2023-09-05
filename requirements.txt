@@ -1,3 +1,4 @@
+global_hotkeys==0.1.6
 PyQt6==6.5.2
 requests==2.28.2
 tomli_w==1.0.0
