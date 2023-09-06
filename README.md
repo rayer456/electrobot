@@ -71,9 +71,9 @@ The yellow stars indicate which category is active and which splits have predict
 
 When you first successfully run `electrobot.py` a bindings file will be created in `config/bindings.json` with some default hotkeys to perform below actions.
 
-- Close a prediction
-- Cancel a prediction
-- Select an outcome <1-10> *by default only the first four outcomes are made into a hotkey. You can go all the way up to 10 by just copy pasting the objects in the file.
+- Close a prediction with CTRL + 5
+- Cancel a prediction with CTRL + 6
+- Select an outcome <1-10> with CTRL + <1-4> *by default only the first four outcomes are made into a hotkey. You can go all the way up to 10 by just copy pasting the objects in the bindings file.
 
 - You can change the actual keys you press by editing the `hotkey` field. [List of available keys](https://github.com/btsdev/global_hotkeys#list-of-the-available-keys)
 
