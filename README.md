@@ -1,6 +1,6 @@
 # electrobot
 
-Twitch chat bot that manages predictions via chat commands and starts predictions based on Livesplit. Now with hotkey support.
+Twitch bot that manages predictions via chat commands and starts predictions automatically based on Livesplit. Now with hotkey support.
 
 # Prerequisites
 
