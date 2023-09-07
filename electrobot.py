@@ -143,10 +143,8 @@ def get_mods():
         "Client-Id": f"{CLIENT_ID}"
     }
     response = requests.get(f'https://api.twitch.tv/helix/moderation/moderators?broadcaster_id={B_ID}', headers=headers)
-    
-    mods = []
-    for mod in json.loads(response.text)['data']:
-        mods.append(mod['user_login'])
+
+    mods = [mod['user_login'] for mod in json.loads(response.text)['data']]
     mods.append(CFG['irc']['CHANNEL'])
 
     return mods
@@ -376,21 +374,19 @@ def chat_interact(buffer, mods):
                 send_data(f"PRIVMSG {CHANNEL} :{response}")
 
 
-def update_latest_prediction():
-    global pred_json
-
+def get_latest_prediction():
     while True:
         headers = {
             "Authorization": f"Bearer {token_broad}",
             "Client-Id": CLIENT_ID
         }
         response = requests.get(f'https://api.twitch.tv/helix/predictions?broadcaster_id={B_ID}&first=1', headers=headers)
-        LOG.logger.debug("update_latest_prediction: request done")
+        LOG.logger.debug("get_latest_prediction: request done")
 
         match response.status_code:
             case 200:
                 pred_json = json.loads(response.text)
-                break
+                return pred_json
             case 401: #token expired
                 validate_token('broad')
 
@@ -401,12 +397,12 @@ def create_prediction(pred_name):
     LOG.logger.debug("create_prediction: Read predictions.json")
     
     not_found = True
-    options = ""
-    for i in preds['predictions']:
-        options += f"{i['name']} "
-        if i['name'] == pred_name: #match
-            i['data']['broadcaster_id'] = B_ID
-            data = i['data']
+    options = ''
+    for p in preds['predictions']:
+        options += f"{p['name']} "
+        if p['name'] == pred_name: #match
+            p['data']['broadcaster_id'] = B_ID
+            data = p['data']
             not_found = False
         
     if not_found:
@@ -436,20 +432,20 @@ def create_prediction(pred_name):
 
 
 def resolve_prediction(outcome):
-    update_latest_prediction()
+    latest_pred = get_latest_prediction()
     
     #ACTIVE, RESOLVED, CANCELED, LOCKED
-    if pred_json['data'][0]['status'] not in ("ACTIVE", "LOCKED"): 
+    if latest_pred['data'][0]['status'] not in ("ACTIVE", "LOCKED"): 
         return "No active predictions"
 
-    if not outcome <= len(pred_json['data'][0]['outcomes']):
+    if not outcome <= len(latest_pred['data'][0]['outcomes']):
         return f"{outcome} is not an option"
 
     data = {
         "broadcaster_id": B_ID,
-        "id": pred_json['data'][0]['id'],
+        "id": latest_pred['data'][0]['id'],
         "status": "RESOLVED",
-        "winning_outcome_id": pred_json['data'][0]['outcomes'][outcome-1]['id']
+        "winning_outcome_id": latest_pred['data'][0]['outcomes'][outcome-1]['id']
     }
 
     while True:
@@ -475,9 +471,9 @@ def resolve_prediction(outcome):
 
 
 def end_prediction(action):
-    update_latest_prediction()
+    latest_pred = get_latest_prediction()
 
-    status = pred_json['data'][0]['status'] 
+    status = latest_pred['data'][0]['status'] 
     match action:
         case "LOCK":
             if status != "ACTIVE":
@@ -490,7 +486,7 @@ def end_prediction(action):
             
     data = {
         "broadcaster_id": B_ID,
-        "id": pred_json['data'][0]['id'],
+        "id": latest_pred['data'][0]['id'],
         "status": f"{action}ED" #LOCK or CANCEL
     }
 

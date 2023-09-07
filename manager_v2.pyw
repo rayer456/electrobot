@@ -32,21 +32,21 @@ class Window(QMainWindow, Ui_MainWindow):
         self.removeCatButton.clicked.connect(self.removeSelectedCategory)
 
         # on user edit
-        self.field_name.textEdited.connect(self.inputChange)
-        self.field_autoStart.clicked.connect(self.inputChange)
-        self.field_splitName.textEdited.connect(self.inputChange)
-        self.field_title.textEdited.connect(self.inputChange)
-        self.field_outcome1.textEdited.connect(self.inputChange)
-        self.field_outcome2.textEdited.connect(self.inputChange)
-        self.field_outcome3.textEdited.connect(self.inputChange)
-        self.field_outcome4.textEdited.connect(self.inputChange)
-        self.field_outcome5.textEdited.connect(self.inputChange)
-        self.field_outcome6.textEdited.connect(self.inputChange)
-        self.field_outcome7.textEdited.connect(self.inputChange)
-        self.field_outcome8.textEdited.connect(self.inputChange)
-        self.field_outcome9.textEdited.connect(self.inputChange)
-        self.field_outcome10.textEdited.connect(self.inputChange)
-        self.field_window.textEdited.connect(self.inputChange)
+        self.field_name.textEdited.connect(self.statusChange)
+        self.field_autoStart.clicked.connect(self.statusChange)
+        self.field_splitName.textEdited.connect(self.statusChange)
+        self.field_title.textEdited.connect(self.statusChange)
+        self.field_outcome1.textEdited.connect(self.statusChange)
+        self.field_outcome2.textEdited.connect(self.statusChange)
+        self.field_outcome3.textEdited.connect(self.statusChange)
+        self.field_outcome4.textEdited.connect(self.statusChange)
+        self.field_outcome5.textEdited.connect(self.statusChange)
+        self.field_outcome6.textEdited.connect(self.statusChange)
+        self.field_outcome7.textEdited.connect(self.statusChange)
+        self.field_outcome8.textEdited.connect(self.statusChange)
+        self.field_outcome9.textEdited.connect(self.statusChange)
+        self.field_outcome10.textEdited.connect(self.statusChange)
+        self.field_window.textEdited.connect(self.statusChange)
 
 
     def checkAndLoadData(self):
@@ -221,7 +221,6 @@ class Window(QMainWindow, Ui_MainWindow):
                 for split in cat['split_names']:
                     if split['split_name'] == selected_split:
                         self.resetFields()
-
                         if split['prediction']: # if prediction present
                             self.populateFields(split['prediction'], selected_split)
 
@@ -238,7 +237,7 @@ class Window(QMainWindow, Ui_MainWindow):
         self.field_autoStart.setChecked(p['auto_predict']['auto_start'])
         self.field_splitName.setText(split_name)
         self.field_title.setText(p['data']['title'])
-
+        
         pred_outcomes = p['data']['outcomes']
         for i, pred_outcome in enumerate(pred_outcomes):
             self.outcomes[i].setText(pred_outcome['title'])
@@ -264,7 +263,7 @@ class Window(QMainWindow, Ui_MainWindow):
         self.field_window.clear()
 
 
-    def inputChange(self):
+    def statusChange(self):
         self.savedStatus.setText("Status: Unsaved")    
         self.savedStatus.setStyleSheet("QLabel {\n"
         "    color: orange;\n"
@@ -323,12 +322,13 @@ class Window(QMainWindow, Ui_MainWindow):
             
             self.refreshSplitList(self.splitList.currentRow())
             self.save_all_data()
+            if self.activeCategory == selected_cat:
+                self.saveToPredFile()
+
             self.savedStatus.setText('Status: Saved')
             self.savedStatus.setStyleSheet("QLabel {\n"
             "    color: darkgreen;\n"
             "}")
-            if self.activeCategory == selected_cat:
-                self.saveToPredFile()
 
 
     def deletePrediction(self):
@@ -356,6 +356,7 @@ class Window(QMainWindow, Ui_MainWindow):
         self.save_all_data()
         if self.activeCategory == selected_cat:
             self.saveToPredFile()
+
         self.savedStatus.setText('Status: Deleted')
         self.savedStatus.setStyleSheet("QLabel {\n"
         "    color: darkred;\n"
@@ -472,12 +473,12 @@ class Window(QMainWindow, Ui_MainWindow):
         try:
             selected_cat = self.categoryList.currentItem().text()
         except AttributeError:
-                msg = QMessageBox()
-                msg.setIcon(QMessageBox.Icon.Warning)
-                msg.setText("No category selected")
-                msg.setWindowTitle("Warning")
-                msg.exec()
-                return
+            msg = QMessageBox()
+            msg.setIcon(QMessageBox.Icon.Warning)
+            msg.setText("No category selected")
+            msg.setWindowTitle("Warning")
+            msg.exec()
+            return
     
         self.categoryList.takeItem(selected)
         activeCat = False
