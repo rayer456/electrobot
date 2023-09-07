@@ -109,7 +109,7 @@ If all was configured correctly you should see this:
 
 The broadcaster and moderators can use these commands.
 - Start predictions with `pred start <name>`
-    - `name` must correspond to the `name` field of a prediction in `predictions.json`
+    - `<name>` must correspond to the `Name` field of a prediction
 - Lock predictions with `pred lock` or wait until the timer runs out
 - Resolve predictions with `pred outcome <1-10>`
 - Cancel predictions with `pred cancel`
