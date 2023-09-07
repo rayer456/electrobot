@@ -107,13 +107,15 @@ If all was configured correctly you should see this:
 
 **Chat commands:**
 
-The broadcaster and moderators can use these commands.
+The broadcaster and moderators can use these commands:
 - Start predictions with `pred start <name>`
     - `<name>` must correspond to the `Name` field of a prediction
 - Lock predictions with `pred lock` or wait until the timer runs out
 - Resolve predictions with `pred outcome <1-10>`
 - Cancel predictions with `pred cancel`
 - `!modcommands` shows this above list
+
+Only the broadcaster can use ![hotkeys](##Hotkeys)
 
 **Examples:**
 - ![](/assets/pred_start.png)
