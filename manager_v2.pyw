@@ -400,11 +400,12 @@ class Window(QMainWindow, Ui_MainWindow):
             return 0
 
         # title
-        if title == '':
+        if len(title) < 1 or len(title) > 45:
             msg = QMessageBox()
             msg.setIcon(QMessageBox.Icon.Warning)
-            msg.setText("Must set a Title")
-            msg.setWindowTitle("No title")
+            msg.setText("Must set a Title with a maximum of 45 characters")
+            msg.setInformativeText(f"You had {len(title)} characters")
+            msg.setWindowTitle("Warning")
             msg.exec()
             return 0
         
@@ -442,14 +443,21 @@ class Window(QMainWindow, Ui_MainWindow):
         # outcomes
         outcome_counter = 0
         for outcome in self.outcomes:
-            if outcome.text() != '':
+            if 0 < len(outcome.text()) < 26:
                 outcome_counter += 1
+            elif len(outcome.text()) > 25:
+                msg = QMessageBox()
+                msg.setIcon(QMessageBox.Icon.Warning)
+                msg.setText("Title of an outcome must be at most 25 characters")
+                msg.setWindowTitle("Warning")
+                msg.exec()
+                return 0
         
         if outcome_counter < 2:
             msg = QMessageBox()
             msg.setIcon(QMessageBox.Icon.Warning)
             msg.setText("Must have at least 2 outcomes")
-            msg.setWindowTitle("Not enough outcomes")
+            msg.setWindowTitle("Warning")
             msg.exec()
             return 0
 

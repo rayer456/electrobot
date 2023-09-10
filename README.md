@@ -115,6 +115,8 @@ The broadcaster and moderators can use these commands.
 - Cancel predictions with `pred cancel`
 - `!modcommands` shows this above list
 
+Only the broadcaster can use [hotkeys](#hotkeys)
+
 **Examples:**
 - ![](/assets/pred_start.png)
 - ![](/assets/30sreminder.png)
