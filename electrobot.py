@@ -540,7 +540,7 @@ async def event_handler(q):
                             queue_event_object(q, buffer)
                         case 'session_reconnect':
                             LOG.logger.warning("Eventsub: reconnect")
-                            event_host = buffer['payload']['session']['reconnect_url']
+                            #event_host = buffer['payload']['session']['reconnect_url']
                             break
                         case 'revocation':
                             event_type = buffer['payload']['subscription']['type']
