@@ -218,7 +218,7 @@ def event_prediction_end(outcomes, e_status, winning_id):
 def read_data():
     global delay, attempts
 
-    validate_utc = datetime.datetime.utcnow() + datetime.timedelta(seconds=3600)
+    validate_utc = datetime.datetime.now(datetime.UTC) + datetime.timedelta(seconds=3600)
     mods = get_mods()
     pred_is_active = False
 
@@ -253,7 +253,7 @@ def read_data():
                         pred_is_active = False
                         event_prediction_end(outcomes, e_status, winning_id)
             
-            current_utc = datetime.datetime.utcnow()
+            current_utc = datetime.datetime.now(datetime.UTC)
             if current_utc >= validate_utc:
                 hourly_validation()
                 validate_utc = current_utc + datetime.timedelta(seconds=3600)
