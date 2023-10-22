@@ -4,7 +4,7 @@ Twitch bot that manages predictions via chat commands and starts predictions aut
 
 # Prerequisites
 
-- [Python](https://www.python.org/downloads/)
+- [Python](https://www.python.org/downloads/) (Add to PATH)
 - [Livesplit](https://livesplit.org/downloads/) and [Livesplit Server](https://github.com/LiveSplit/LiveSplit.Server) (Optional)
 - A Twitch account (Affiliate) (with 2FA enabled)
 - A Twitch bot account
@@ -12,7 +12,7 @@ Twitch bot that manages predictions via chat commands and starts predictions aut
 # Installation
 
 1. Download the [latest release](https://github.com/electrorayer/electrobot/releases) and extract.
-2. Install the necessary dependencies in the extracted folder:
+2. Run the following command to install necessary dependencies:
 
     ```
     pip install -r requirements.txt
