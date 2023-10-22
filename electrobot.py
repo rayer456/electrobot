@@ -13,7 +13,7 @@ from operator import itemgetter
 import global_hotkeys as hkeys
 
 from config import config_file as CFG
-import predictions
+import AutomaticPrediction
 import logger as LOG
 
 
@@ -235,9 +235,9 @@ def read_data():
             if q.qsize() != 0: #from livesplit or eventsub
                 data = q.get() #collision?
                 
-                if type(data) == str: #livesplit
-                    LOG.logger.debug(f"in queue from livesplit: {data}")
-                    create_prediction(data)
+                if type(data) == AutomaticPrediction.AutomaticPrediction: #livesplit
+                    LOG.logger.debug(f"in queue from livesplit: {data.split}")
+                    create_prediction(data.split)
                 else: #eventsub
                     e_status = data['status'] #.end resolved/canceled
                     outcomes = data['outcomes']
@@ -649,8 +649,9 @@ def eventsub(q):
     asyncio.run(event_handler(q))
 
 
-def auto_predictions(q, CFG):
-    predictions.main(q, CFG, LOG)
+def livesplit_predictions(q, CFG):
+    auto_prediction_launcher = AutomaticPrediction.Launcher()
+    auto_prediction_launcher.launch(q, CFG, LOG)
 
 
 if __name__ == "__main__":
@@ -667,7 +668,7 @@ if __name__ == "__main__":
     event_process = mp.Process(target=eventsub, daemon=True, args=(q,))
     event_process.start()
 
-    prediction_process = mp.Process(target=auto_predictions, daemon=True, args=(q,CFG))
-    prediction_process.start()
+    livesplit_prediction_process = mp.Process(target=livesplit_predictions, daemon=True, args=(q,CFG))
+    livesplit_prediction_process.start()
 
     read_data()
