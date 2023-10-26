@@ -1,28 +1,21 @@
-#Check out the README file on how to configure this file!
+[twitch.auth]
+CLIENT_ID = "YOUR_CLIENT_ID"
+CLIENT_SECRET = "YOUR_CLIENT_SECRET"
+REDIRECT_URI = "http://localhost:8777" # must match HOST/PORT in [socket] 
+
+[twitch.info]
+CHANNEL = "YOUR_CHANNEL_NAME" # must be lowercase
+BOT_ACCOUNT = "YOUR_BOT_NAME"
+CHANNEL_ID = ""
+
+[twitch.scopes]
+BOT_SCOPE = "chat%3Aread+chat%3Aedit"
+BROAD_SCOPE = "channel%3Amanage%3Apredictions+moderation%3Aread"
 
 [socket]
-HOST = "127.0.0.1" #localhost
+HOST = "127.0.0.1" # localhost
 PORT = 8777
 
 [livesplit]
 HOST = "127.0.0.1"
 PORT = 16834
-
-[auth] #found when creating application dev.twitch.tv/console
-CLIENT_ID = "YOUR_CLIENT_ID"
-CLIENT_SECRET = "YOUR_CLIENT_SECRET"
-REDIRECT_URI = "http://localhost:8777" #must match HOST/PORT in [socket] 
-CHANNEL_ID = ""
-
-[scopes]
-BOT_SCOPE = "chat%3Aread+chat%3Aedit"
-BROAD_SCOPE = "channel%3Amanage%3Apredictions+moderation%3Aread"
-
-[irc]
-HOST = "irc.chat.twitch.tv"
-PORT = 6697
-CHANNEL = "YOUR_CHANNEL" #MUST BE LOWERCASE
-BOT_ACCOUNT = "YOUR_BOT"
-
-[eventsub]
-HOST = "wss://eventsub.wss.twitch.tv/ws"

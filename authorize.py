@@ -4,18 +4,19 @@ import requests
 import webbrowser
 import json
 import tomli_w
-from config import config_file as CFG
 import logger as LOG
+
+from config import config_file as CFG
 
 
 HOST = CFG['socket']['HOST']
 PORT = CFG['socket']['PORT']
-CLIENT_ID = CFG['auth']['CLIENT_ID']
-CLIENT_SECRET = CFG['auth']['CLIENT_SECRET']
-REDIRECT_URI = CFG['auth']['REDIRECT_URI']
-BOT_SCOPE = CFG['scopes']['BOT_SCOPE']
-BROAD_SCOPE = CFG['scopes']['BROAD_SCOPE']
-CHANNEL = CFG['irc']['CHANNEL']
+CLIENT_ID = CFG['twitch']['auth']['CLIENT_ID']
+CLIENT_SECRET = CFG['twitch']['auth']['CLIENT_SECRET']
+REDIRECT_URI = CFG['twitch']['auth']['REDIRECT_URI']
+BOT_SCOPE = CFG['twitch']['scopes']['BOT_SCOPE']
+BROAD_SCOPE = CFG['twitch']['scopes']['BROAD_SCOPE']
+CHANNEL = CFG['twitch']['info']['CHANNEL']
 
 TOKEN_URL = 'https://id.twitch.tv/oauth2/token'
 AUTHORIZE_URL = 'https://id.twitch.tv/oauth2/authorize'
@@ -114,7 +115,7 @@ def set_channel_id(token_broad):
     match response.status_code:
         case 200:
             data = json.loads(response.text)
-            CFG['auth']['CHANNEL_ID'] = data['data'][0]['id']
+            CFG['twitch']['info']['CHANNEL_ID'] = data['data'][0]['id']
 
             with open('config/config.toml', 'wb') as file:
                 tomli_w.dump(CFG ,file)

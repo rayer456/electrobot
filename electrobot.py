@@ -17,17 +17,25 @@ import AutomaticPrediction
 import logger as LOG
 
 
-HOST = CFG['irc']['HOST']
-PORT = CFG['irc']['PORT']
-CHANNEL = f"#{CFG['irc']['CHANNEL']}"
-ACCOUNT = CFG['irc']['BOT_ACCOUNT'] #can be anything?
-CLIENT_ID = CFG['auth']['CLIENT_ID']
-CLIENT_SECRET = CFG['auth']['CLIENT_SECRET']
-B_ID = CFG['auth']['CHANNEL_ID']
-event_host = CFG['eventsub']['HOST']
+CHANNEL = f"#{CFG['twitch']['info']['CHANNEL']}"
+ACCOUNT = CFG['twitch']['info']['BOT_ACCOUNT'] # can be anything?
+CLIENT_ID = CFG['twitch']['auth']['CLIENT_ID']
+CLIENT_SECRET = CFG['twitch']['auth']['CLIENT_SECRET']
+B_ID = CFG['twitch']['info']['CHANNEL_ID']
 
 TWITCH_AUTH_API = 'https://id.twitch.tv/oauth2'
 TWITCH_API = 'https://api.twitch.tv/helix'
+TWITCH_EVENTSUB = 'wss://eventsub.wss.twitch.tv/ws'
+TWITCH_IRC_HOST = 'irc.chat.twitch.tv'
+TWITCH_IRC_PORT = 6697
+
+PRED_BEGIN_MESSAGE = CFG['messages']['PRED_BEGIN_MESSAGE']
+PRED_REMINDER_MESSAGE = CFG['messages']['PRED_REMINDER_MESSAGE']
+PRED_LOCK_PREFIX = CFG['messages']['PRED_LOCK_PREFIX']
+PRED_LOCK_SUFFIX = CFG['messages']['PRED_LOCK_SUFFIX']
+PRED_WINNER_PREFIX = CFG['messages']['PRED_WINNER_PREFIX']
+PRED_LOSER_PREFIX = CFG['messages']['PRED_LOSER_PREFIX']
+PRED_CANCEL_MESSAGE = CFG['messages']['PRED_CANCEL_MESSAGE']
 
 
 def refresh_token(refr_token, br=''):
@@ -118,13 +126,13 @@ def IRC_connect():
     global IRC
 
     context = ssl.create_default_context(ssl.Purpose.SERVER_AUTH)
-    sock = socket.create_connection((HOST, PORT))
-    IRC = context.wrap_socket(sock, server_hostname=HOST)
+    sock = socket.create_connection((TWITCH_IRC_HOST, TWITCH_IRC_PORT))
+    IRC = context.wrap_socket(sock, server_hostname=TWITCH_IRC_HOST)
     IRC.setblocking(False)
 
-    chat(f"PASS oauth:{token_bot}")
-    chat(f"NICK {ACCOUNT}")
-    chat(f"JOIN {CHANNEL}")
+    irc_send(f"PASS oauth:{token_bot}")
+    irc_send(f"NICK {ACCOUNT}")
+    irc_send(f"JOIN {CHANNEL}")
 
     LOG.logger.info("Connected to IRC Chat")
 
@@ -148,7 +156,7 @@ def IRC_reconnect():
     IRC_connect()
 
 
-def chat(command):
+def irc_send(command):
     IRC.send(f"{command}\n".encode('utf-8'))
 
 
@@ -162,13 +170,13 @@ def get_mods() -> list:
     )
 
     mods = [mod['user_login'] for mod in json.loads(response.text)['data']]
-    mods.append(CFG['irc']['CHANNEL'])
+    mods.append(CFG['twitch']['info']['CHANNEL'])
 
     return mods
 
 
-def event_prediction_begin(locks_at):
-    chat(f"PRIVMSG {CHANNEL} :🎰🚨🎰BETS ARE OPEN, any gamblers? modCheck 🎰🚨🎰")
+def event_prediction_begin(locks_at) -> str:
+    irc_send(f"PRIVMSG {CHANNEL} :{PRED_BEGIN_MESSAGE}")
     locks_at = locks_at.replace('T', ' ')[:locks_at.find('.')] #formatting
     locks_at = datetime.datetime.strptime(locks_at, "%Y-%m-%d %H:%M:%S") - datetime.timedelta(seconds=35)
 
@@ -189,7 +197,7 @@ def event_prediction_lock(outcomes):
         else:
             split_string = f"{round(split)}"
 
-    chat(f"PRIVMSG {CHANNEL} :🎰BETS ARE CLOSED🎰 {split_string} split ({total_users} betters, pool: {total_points:,}) PauseFish")
+    irc_send(f"PRIVMSG {CHANNEL} :{PRED_LOCK_PREFIX} {split_string} split ({total_users} users, pool: {total_points:,}) {PRED_LOCK_SUFFIX}")
 
 
 def event_prediction_end(outcomes, e_status, winning_id):
@@ -207,29 +215,29 @@ def event_prediction_end(outcomes, e_status, winning_id):
             if i != 0:
                 winner_string += f", {winner['user_name']} (+{winner['channel_points_won']:,})"
             else:
-                winner_string = f"GIGACHAD {winner['user_name']} (+{winner['channel_points_won']:,})"
+                winner_string = f"{PRED_WINNER_PREFIX} {winner['user_name']} (+{winner['channel_points_won']:,})"
         
         if len(winning_outcome['top_predictors']) != 0: #if no one won
-            chat(f"PRIVMSG {CHANNEL} :{winner_string}")
+            irc_send(f"PRIVMSG {CHANNEL} :{winner_string}")
         
         for losing_outcome in losing_outcomes:
             for loser in losing_outcome['top_predictors']:
                 all_losers.append(loser)
         
-        #get 10 biggest losers
+        # get 10 biggest losers
         all_losers = sorted(all_losers, key=itemgetter('channel_points_used'), reverse=True)[:10]
 
         for i, loser in enumerate(all_losers):
             if i != 0:
                 loser_string += f", {loser['user_name']} (-{loser['channel_points_used']:,})"
             else:
-                loser_string = f"xdd {loser['user_name']} (-{loser['channel_points_used']:,})"
+                loser_string = f"{PRED_LOSER_PREFIX} {loser['user_name']} (-{loser['channel_points_used']:,})"
         
-        if len(all_losers) != 0: #no one lost
-            chat(f"PRIVMSG {CHANNEL} :{loser_string}")
+        if len(all_losers) != 0: # at least 1 loser
+            irc_send(f"PRIVMSG {CHANNEL} :{loser_string}")
         
-    else: #canceled
-        chat(f"PRIVMSG {CHANNEL} :Prediction canceled SadgeCry")
+    else: # canceled
+        irc_send(f"PRIVMSG {CHANNEL} :{PRED_CANCEL_MESSAGE}")
 
 
 def main():
@@ -270,14 +278,16 @@ def main():
                         pred_is_active = False
                         event_prediction_end(outcomes, e_status, winning_id)
             
+            # token validation
             current_utc = datetime.datetime.now(datetime.UTC)
             if current_utc >= validate_utc:
                 hourly_validation()
                 validate_utc = current_utc + datetime.timedelta(seconds=3600)
 
+            # reminder check
             if pred_is_active:
                 if current_utc.strftime("%Y-%m-%d %H:%M:%S") >= time_35s_before_lock:
-                    chat(f"PRIVMSG {CHANNEL} :🚨30 seconds left VeryPog make your bets NOW🚨")
+                    irc_send(f"PRIVMSG {CHANNEL} :{PRED_REMINDER_MESSAGE}")
                     pred_is_active = False
                     
             buffer = IRC.recv(1024).decode()
@@ -293,7 +303,7 @@ def main():
 
             if msg[0] == "PING":
                 LOG.logger.info("Pinged")
-                chat(f"PONG {msg[1]}")
+                irc_send(f"PONG {msg[1]}")
             elif msg[1] == "PRIVMSG": #TODO commands, modcommands, song, pb, wr
                 chat_interact(buffer.splitlines(), mods)
 
@@ -304,6 +314,21 @@ def main():
             break
         except Exception:
             LOG.logger.error("Exception in read_data", exc_info=True)
+    
+
+def hourly_validation():
+    http_code = validate_token('bot')
+    http_code2 = validate_token('broad')
+
+    if http_code == 200 and http_code2 == 200:
+        LOG.logger.debug("Hourly check done")
+    elif http_code == 401:
+        LOG.logger.info("Reconnecting...")
+        IRC_reconnect()
+    elif http_code2 == 401:
+        pass
+    else:
+        LOG.logger.error(f"hourly_validation: code {http_code} / {http_code2}")
         
 
 def get_hotkeys() -> list:
@@ -364,7 +389,7 @@ def use_hotkeys(action: str):
             response = end_prediction("CANCEL")
 
     if response != None: 
-        chat(f"PRIVMSG {CHANNEL} :{response}")
+        irc_send(f"PRIVMSG {CHANNEL} :{response}")
 
 
 def chat_interact(buffer, mods): 
@@ -388,7 +413,7 @@ def chat_interact(buffer, mods):
                     response = "pred start <name>, pred lock, pred outcome <1-10>, pred cancel"
 
             if response != None: 
-                chat(f"PRIVMSG {CHANNEL} :{response}")
+                irc_send(f"PRIVMSG {CHANNEL} :{response}")
 
 
 def get_latest_prediction():
@@ -432,7 +457,7 @@ def create_prediction(pred_name):
             "Client-Id": f"{CLIENT_ID}",
             "Content-Type": "application/json"
         }
-        response = requests.post('{TWITCH_API}/predictions', json=data, headers=headers)
+        response = requests.post(f'{TWITCH_API}/predictions', json=data, headers=headers)
 
         match response.status_code:
             case 200:
@@ -471,7 +496,7 @@ def resolve_prediction(outcome):
             "Client-Id": f"{CLIENT_ID}",
             "Content-Type": "application/json"
         }
-        response = requests.patch('{TWITCH_API}/predictions', headers=headers, json=data)
+        response = requests.patch(f'{TWITCH_API}/predictions', headers=headers, json=data)
 
         match response.status_code:
             case 200:
@@ -513,7 +538,7 @@ def end_prediction(action):
             "Client-Id": f"{CLIENT_ID}",
             "Content-Type": "application/json"
         }
-        response = requests.patch('{TWITCH_API}/predictions', headers=headers, json=data)
+        response = requests.patch(f'{TWITCH_API}/predictions', headers=headers, json=data)
 
         match response.status_code:
             case 200:
@@ -529,14 +554,14 @@ def end_prediction(action):
         
 
 async def event_handler(q):
-    global event_host
     global token_broad
-    
+
+    current_eventsub = TWITCH_EVENTSUB
     while True:
         try:
-            async with websockets.connect((event_host)) as eventsub:
+            async with websockets.connect((current_eventsub)) as websock:
                 while True:
-                    buffer = await asyncio.wait_for(eventsub.recv(), 15) #no keepalive = conn died
+                    buffer = await asyncio.wait_for(websock.recv(), 15) #no keepalive = conn died
                     buffer = json.loads(buffer) #dict
 
                     match buffer['metadata']['message_type']:
@@ -557,7 +582,7 @@ async def event_handler(q):
                             queue_event_object(q, buffer)
                         case 'session_reconnect':
                             LOG.logger.warning("Eventsub: reconnect")
-                            #event_host = buffer['payload']['session']['reconnect_url']
+                            #current_eventsub = buffer['payload']['session']['reconnect_url']
                             break
                         case 'revocation':
                             event_type = buffer['payload']['subscription']['type']
@@ -569,11 +594,11 @@ async def event_handler(q):
                             exit()
         except TimeoutError: #no keepalive
             LOG.logger.warning("Connection lost, reconnecting...", exc_info=True)
-            event_host = CFG['eventsub']['HOST']
+            current_eventsub = TWITCH_EVENTSUB
             continue
         except websockets.exceptions.ConnectionClosedError:
             LOG.logger.error("Eventsub: Connection closed", exc_info=True)
-            event_host = CFG['eventsub']['HOST']
+            current_eventsub = TWITCH_EVENTSUB
             continue
         except Exception:
             LOG.logger.error("Websockets error", exc_info=True)
@@ -612,7 +637,7 @@ def sub_to_event(q, session_id, event_type):
             token_broad = q.get() #after 401, not initial connect
 
         response = requests.post(
-            url='{TWITCH_API}/eventsub/subscriptions', 
+            url=f'{TWITCH_API}/eventsub/subscriptions', 
             headers={
                 "Authorization": f"Bearer {token_broad}", 
                 "Client-Id": f"{CLIENT_ID}",
@@ -647,21 +672,6 @@ def sub_to_event(q, session_id, event_type):
             case _:
                 LOG.logger.error(f"Eventsub: {response.status_code}")
                 break
-
-
-def hourly_validation():
-    http_code = validate_token('bot')
-    http_code2 = validate_token('broad')
-
-    if http_code == 200 and http_code2 == 200:
-        LOG.logger.debug("Hourly check done")
-    elif http_code == 401:
-        LOG.logger.info("Reconnecting...")
-        IRC_reconnect()
-    elif http_code2 == 401:
-        pass
-    else:
-        LOG.logger.error(f"hourly_validation: code {http_code} / {http_code2}")
 
 
 def eventsub(q):

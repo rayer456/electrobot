@@ -54,6 +54,9 @@ class Launcher():
         except ConnectionRefusedError:
             LOG.logger.warning("Predictions will not start automatically by split")
             LOG.logger.warning("Start Livesplit Server and restart the bot")
+        except ConnectionAbortedError:
+            LOG.logger.error("Connection to Livesplit Server was aborted")
+            LOG.logger.error("Will continue without automatic predictions")
 
     def convert_to_hms(self, raw_time):
         hms_list = raw_time.split(':') #[1,22,33] or [18,16]
