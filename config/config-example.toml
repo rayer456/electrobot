@@ -12,6 +12,15 @@ CHANNEL_ID = ""
 BOT_SCOPE = "chat%3Aread+chat%3Aedit"
 BROAD_SCOPE = "channel%3Amanage%3Apredictions+moderation%3Aread"
 
+[messages]
+PRED_BEGIN_MESSAGE = '🎰🚨🎰BETS ARE OPEN, any gamblers? modCheck 🎰🚨🎰'
+PRED_REMINDER_MESSAGE = '🚨30 seconds left VeryPog make your bets NOW🚨'
+PRED_LOCK_PREFIX = '🎰BETS ARE CLOSED🎰'
+PRED_LOCK_SUFFIX = 'PauseFish'
+PRED_WINNER_PREFIX = 'GIGACHAD'
+PRED_LOSER_PREFIX = 'xdd'
+PRED_CANCEL_MESSAGE = 'Prediction canceled SadgeCry'
+
 [socket]
 HOST = "127.0.0.1" # localhost
 PORT = 8777
