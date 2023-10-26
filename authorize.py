@@ -17,6 +17,10 @@ BOT_SCOPE = CFG['scopes']['BOT_SCOPE']
 BROAD_SCOPE = CFG['scopes']['BROAD_SCOPE']
 CHANNEL = CFG['irc']['CHANNEL']
 
+TOKEN_URL = 'https://id.twitch.tv/oauth2/token'
+AUTHORIZE_URL = 'https://id.twitch.tv/oauth2/authorize'
+TWITCH_API = 'https://api.twitch.tv/helix'
+
 
 def get_code(type_token):
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
@@ -30,7 +34,7 @@ def get_code(type_token):
             authorize(BROAD_SCOPE)
         LOG.logger.info("Browser opened, displaying authorization page")
 
-        conn, addr = sock.accept() #blocking socket
+        conn = sock.accept()[0] #blocking socket
         with conn:
             while True:
                 data = conn.recv(1024).decode('utf-8') #waiting
@@ -49,10 +53,10 @@ def get_code(type_token):
                     </html>
                 """.encode('utf-8'))
                 
-                y = data.splitlines()[0].split()[1] #grab parameters
+                # grab parameters
+                y = data.splitlines()[0].split()[1] 
                 if y[y.find('?')+1:y.find('=')] == "error":
-                    LOG.logger.info("User didn't authorize")
-                    exit()
+                    LOG.logger.error(f'Message: {y}')
                 else:
                     secret = y[y.find('=')+1:y.find('&')]
                     
@@ -62,17 +66,18 @@ def get_code(type_token):
 
 
 def authorize(scope):
-    link = f'https://id.twitch.tv/oauth2/authorize?response_type=code&client_id={CLIENT_ID}&redirect_uri={REDIRECT_URI}&scope={scope}&force_verify=true'
+    link = f'{AUTHORIZE_URL}?response_type=code&client_id={CLIENT_ID}&redirect_uri={REDIRECT_URI}&scope={scope}&force_verify=true'
     webbrowser.open(link)
 
 
 def get_token(code, type_token):
-    headers = {
-    'Content-Type': 'application/x-www-form-urlencoded',
-    }
-    data = f'client_id={CLIENT_ID}&client_secret={CLIENT_SECRET}&code={code}&grant_type=authorization_code&redirect_uri={REDIRECT_URI}'
-
-    response = requests.post('https://id.twitch.tv/oauth2/token', headers=headers, data=data)
+    response = requests.post(
+        url=TOKEN_URL, 
+        headers={
+            'Content-Type': 'application/x-www-form-urlencoded',
+        }, 
+        data=f'client_id={CLIENT_ID}&client_secret={CLIENT_SECRET}&code={code}&grant_type=authorization_code&redirect_uri={REDIRECT_URI}',
+    )
     LOG.logger.info("Token requested...")
 
     match response.status_code:
@@ -88,45 +93,53 @@ def get_token(code, type_token):
                 set_channel_id(data['access_token'])
 
             LOG.logger.info("Stored tokens")
-            input("[+] All done!")
+            print("\n[+] All done!")
         case 400:
             LOG.logger.error("Token: Invalid client_id or code or grant_type")
         case 403:
             LOG.logger.error("Token: Invalid client secret")
         case _:
-            LOG.logger.error(f"Token {response.status_code}: Unknown error")
+            LOG.logger.error(f"Token {response.status_code}: {response.text}")
 
 
 def set_channel_id(token_broad):
-    headers = {
-        "Authorization": f"Bearer {token_broad}", 
-        "Client-Id": f"{CLIENT_ID}"
-    }
-    response = requests.get(f'https://api.twitch.tv/helix/users?login={CHANNEL}', headers=headers)
+    response = requests.get(
+        url=f'{TWITCH_API}/users?login={CHANNEL}', 
+        headers={
+            "Authorization": f"Bearer {token_broad}", 
+            "Client-Id": f"{CLIENT_ID}"
+        }
+    )
 
-    data = json.loads(response.text)
-    CFG['auth']['CHANNEL_ID'] = data['data'][0]['id']
+    match response.status_code:
+        case 200:
+            data = json.loads(response.text)
+            CFG['auth']['CHANNEL_ID'] = data['data'][0]['id']
 
-    with open('config/config.toml', 'wb') as file:
-        tomli_w.dump(CFG ,file)
+            with open('config/config.toml', 'wb') as file:
+                tomli_w.dump(CFG ,file)
+        case _:
+            LOG.logger.error(f'Set_channel_id: {response.status_code}: {response.text}')
 
 
-print('[+] This script will open your default browser to authorize a bot or streamer Twitch account.')
-print('[+] Run this script twice to authorize both a bot/streamer account, both are necessary.\n')
+if __name__ == "__main__":
+    print('[+] This script will open your browser to authorize a bot or streamer Twitch account.')
+    print('[+] Run this script twice to authorize both a bot/streamer account, both are necessary.\n')
 
-print('[+] Make sure you are logged in on the correct account each time\n')
+    print('[+] Make sure you are logged in on the correct account each time\n')
 
-print("[+] Type 'bot' to authorize your bot account")
-print("[+] This account will be used to type in chat\n")
+    print("[+] Type 'bot' to authorize your bot account")
+    print("[+] This account will be used to type in chat\n")
 
-print("[+] Type 'streamer' to authorize your streamer account")
-print("[+] This is necessary for the prediction functionalities\n")
+    print("[+] Type 'streamer' to authorize your streamer account")
+    print("[+] This is necessary for the prediction functionalities\n")
 
-choice = ''
-while choice not in ['bot', 'streamer']:
-    choice = input("[+] bot or streamer?\t")
+    choice = ''
+    while choice not in ['bot', 'streamer']:
+        choice = input("[+] bot or streamer?\t")
 
-if choice == 'bot':
-    get_code('bot')
-else:
-    get_code('broad')
+    if choice == 'bot':
+        get_code('bot')
+    else:
+        get_code('broad')
+    input()

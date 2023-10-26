@@ -26,12 +26,19 @@ CLIENT_SECRET = CFG['auth']['CLIENT_SECRET']
 B_ID = CFG['auth']['CHANNEL_ID']
 event_host = CFG['eventsub']['HOST']
 
+TWITCH_AUTH_API = 'https://id.twitch.tv/oauth2'
+TWITCH_API = 'https://api.twitch.tv/helix'
+
 
 def refresh_token(refr_token, br=''):
-    headers = {"Content-Type": "application/x-www-form-urlencoded"}
-    data = f"grant_type=refresh_token&client_id={CLIENT_ID}&client_secret={CLIENT_SECRET}&refresh_token={refr_token}"
-   
-    response = requests.post("https://id.twitch.tv/oauth2/token", headers=headers, data=data)
+    response = requests.post(
+        url=f'{TWITCH_AUTH_API}/token', 
+        headers={
+            "Content-Type": "application/x-www-form-urlencoded"
+        }, 
+        data=f"grant_type=refresh_token&client_id={CLIENT_ID}&client_secret={CLIENT_SECRET}&refresh_token={refr_token}"
+    )
+
     match response.status_code:
         case 200:
             with open(f'tokens/token_{br}.json', 'w') as file:
@@ -55,19 +62,27 @@ def validate_token(br, q=None):
                 token = json.load(token_file)
                 break
         except json.JSONDecodeError: #not readable
-            LOG.logger.info("Removing bad file")
-            LOG.logger.info("Run authorize.py")
+            LOG.logger.error("Unreadable file, removing bad file")
+            if br == 'bot':
+                LOG.logger.info("Run authorize.py to authorize your bot account then restart the bot")
+            else:
+                LOG.logger.info("Run authorize.py to authorize your streamer account then restart the bot")
+            
             os.remove(f'tokens/token_{br}.json')
-            exit()
+            input()
         except FileNotFoundError:
             if br == 'bot':
-                LOG.logger.error("No bot token, run authorize.py")
+                LOG.logger.error("Missing bot token, run authorize.py to authorize your bot account then restart the bot")
             else:
-                LOG.logger.error("No streamer token, run authorize.py")
-            exit()
+                LOG.logger.error("Missing streamer token, run authorize.py to authorize your streamer account then restart the bot")
+            input()
     
-    headers = {"Authorization": f"OAuth {token['access_token']}"}
-    response = requests.get("https://id.twitch.tv/oauth2/validate", headers=headers)
+    response = requests.get(
+        url=f'{TWITCH_AUTH_API}/validate', 
+        headers={
+            "Authorization": f"OAuth {token['access_token']}"
+        }
+    )
 
     match response.status_code:
         case 200: #ok, valid
@@ -107,9 +122,9 @@ def IRC_connect():
     IRC = context.wrap_socket(sock, server_hostname=HOST)
     IRC.setblocking(False)
 
-    send_data(f"PASS oauth:{token_bot}")
-    send_data(f"NICK {ACCOUNT}")
-    send_data(f"JOIN {CHANNEL}")
+    chat(f"PASS oauth:{token_bot}")
+    chat(f"NICK {ACCOUNT}")
+    chat(f"JOIN {CHANNEL}")
 
     LOG.logger.info("Connected to IRC Chat")
 
@@ -133,16 +148,18 @@ def IRC_reconnect():
     IRC_connect()
 
 
-def send_data(command):
+def chat(command):
     IRC.send(f"{command}\n".encode('utf-8'))
 
 
-def get_mods():
-    headers = {
-        "Authorization": f"Bearer {token_broad}", 
-        "Client-Id": f"{CLIENT_ID}"
-    }
-    response = requests.get(f'https://api.twitch.tv/helix/moderation/moderators?broadcaster_id={B_ID}', headers=headers)
+def get_mods() -> list:
+    response = requests.get(
+        url=f'{TWITCH_API}/moderation/moderators?broadcaster_id={B_ID}', 
+        headers={
+            "Authorization": f"Bearer {token_broad}", 
+            "Client-Id": f"{CLIENT_ID}",
+        }
+    )
 
     mods = [mod['user_login'] for mod in json.loads(response.text)['data']]
     mods.append(CFG['irc']['CHANNEL'])
@@ -151,7 +168,7 @@ def get_mods():
 
 
 def event_prediction_begin(locks_at):
-    send_data(f"PRIVMSG {CHANNEL} :🎰🚨🎰BETS ARE OPEN, any gamblers? modCheck 🎰🚨🎰")
+    chat(f"PRIVMSG {CHANNEL} :🎰🚨🎰BETS ARE OPEN, any gamblers? modCheck 🎰🚨🎰")
     locks_at = locks_at.replace('T', ' ')[:locks_at.find('.')] #formatting
     locks_at = datetime.datetime.strptime(locks_at, "%Y-%m-%d %H:%M:%S") - datetime.timedelta(seconds=35)
 
@@ -172,7 +189,7 @@ def event_prediction_lock(outcomes):
         else:
             split_string = f"{round(split)}"
 
-    send_data(f"PRIVMSG {CHANNEL} :🎰BETS ARE CLOSED🎰 {split_string} split ({total_users} betters, pool: {total_points:,}) PauseFish")
+    chat(f"PRIVMSG {CHANNEL} :🎰BETS ARE CLOSED🎰 {split_string} split ({total_users} betters, pool: {total_points:,}) PauseFish")
 
 
 def event_prediction_end(outcomes, e_status, winning_id):
@@ -193,7 +210,7 @@ def event_prediction_end(outcomes, e_status, winning_id):
                 winner_string = f"GIGACHAD {winner['user_name']} (+{winner['channel_points_won']:,})"
         
         if len(winning_outcome['top_predictors']) != 0: #if no one won
-            send_data(f"PRIVMSG {CHANNEL} :{winner_string}")
+            chat(f"PRIVMSG {CHANNEL} :{winner_string}")
         
         for losing_outcome in losing_outcomes:
             for loser in losing_outcome['top_predictors']:
@@ -209,13 +226,13 @@ def event_prediction_end(outcomes, e_status, winning_id):
                 loser_string = f"xdd {loser['user_name']} (-{loser['channel_points_used']:,})"
         
         if len(all_losers) != 0: #no one lost
-            send_data(f"PRIVMSG {CHANNEL} :{loser_string}")
+            chat(f"PRIVMSG {CHANNEL} :{loser_string}")
         
     else: #canceled
-        send_data(f"PRIVMSG {CHANNEL} :Prediction canceled SadgeCry")
+        chat(f"PRIVMSG {CHANNEL} :Prediction canceled SadgeCry")
 
 
-def read_data():
+def main():
     global delay, attempts
 
     validate_utc = datetime.datetime.now(datetime.UTC) + datetime.timedelta(seconds=3600)
@@ -260,7 +277,7 @@ def read_data():
 
             if pred_is_active:
                 if current_utc.strftime("%Y-%m-%d %H:%M:%S") >= time_35s_before_lock:
-                    send_data(f"PRIVMSG {CHANNEL} :🚨30 seconds left VeryPog make your bets NOW🚨")
+                    chat(f"PRIVMSG {CHANNEL} :🚨30 seconds left VeryPog make your bets NOW🚨")
                     pred_is_active = False
                     
             buffer = IRC.recv(1024).decode()
@@ -276,7 +293,7 @@ def read_data():
 
             if msg[0] == "PING":
                 LOG.logger.info("Pinged")
-                send_data(f"PONG {msg[1]}")
+                chat(f"PONG {msg[1]}")
             elif msg[1] == "PRIVMSG": #TODO commands, modcommands, song, pb, wr
                 chat_interact(buffer.splitlines(), mods)
 
@@ -347,7 +364,7 @@ def use_hotkeys(action: str):
             response = end_prediction("CANCEL")
 
     if response != None: 
-        send_data(f"PRIVMSG {CHANNEL} :{response}")
+        chat(f"PRIVMSG {CHANNEL} :{response}")
 
 
 def chat_interact(buffer, mods): 
@@ -371,7 +388,7 @@ def chat_interact(buffer, mods):
                     response = "pred start <name>, pred lock, pred outcome <1-10>, pred cancel"
 
             if response != None: 
-                send_data(f"PRIVMSG {CHANNEL} :{response}")
+                chat(f"PRIVMSG {CHANNEL} :{response}")
 
 
 def get_latest_prediction():
@@ -380,7 +397,7 @@ def get_latest_prediction():
             "Authorization": f"Bearer {token_broad}",
             "Client-Id": CLIENT_ID
         }
-        response = requests.get(f'https://api.twitch.tv/helix/predictions?broadcaster_id={B_ID}&first=1', headers=headers)
+        response = requests.get(f'{TWITCH_API}/predictions?broadcaster_id={B_ID}&first=1', headers=headers)
         LOG.logger.debug("get_latest_prediction: request done")
 
         match response.status_code:
@@ -415,7 +432,7 @@ def create_prediction(pred_name):
             "Client-Id": f"{CLIENT_ID}",
             "Content-Type": "application/json"
         }
-        response = requests.post('https://api.twitch.tv/helix/predictions', json=data, headers=headers)
+        response = requests.post('{TWITCH_API}/predictions', json=data, headers=headers)
 
         match response.status_code:
             case 200:
@@ -454,7 +471,7 @@ def resolve_prediction(outcome):
             "Client-Id": f"{CLIENT_ID}",
             "Content-Type": "application/json"
         }
-        response = requests.patch('https://api.twitch.tv/helix/predictions', headers=headers, json=data)
+        response = requests.patch('{TWITCH_API}/predictions', headers=headers, json=data)
 
         match response.status_code:
             case 200:
@@ -496,7 +513,7 @@ def end_prediction(action):
             "Client-Id": f"{CLIENT_ID}",
             "Content-Type": "application/json"
         }
-        response = requests.patch('https://api.twitch.tv/helix/predictions', headers=headers, json=data)
+        response = requests.patch('{TWITCH_API}/predictions', headers=headers, json=data)
 
         match response.status_code:
             case 200:
@@ -594,23 +611,25 @@ def sub_to_event(q, session_id, event_type):
         if q.qsize() != 0:
             token_broad = q.get() #after 401, not initial connect
 
-        headers = {
+        response = requests.post(
+            url='{TWITCH_API}/eventsub/subscriptions', 
+            headers={
                 "Authorization": f"Bearer {token_broad}", 
                 "Client-Id": f"{CLIENT_ID}",
                 "Content-Type": "application/json"
+            }, 
+            json={
+                "type": event_type,
+                "version": '1',
+                "condition": {
+                    "broadcaster_user_id": B_ID
+                },
+                "transport": {
+                    "method": "websocket",
+                    "session_id": session_id
+                }
             }
-        data = {
-            "type": event_type,
-            "version": '1',
-            "condition": {
-                "broadcaster_user_id": B_ID
-            },
-            "transport": {
-                "method": "websocket",
-                "session_id": session_id
-            }
-        }
-        response = requests.post('https://api.twitch.tv/helix/eventsub/subscriptions', headers=headers, json=data)
+        )
 
         match response.status_code:
             case 202:
@@ -671,4 +690,4 @@ if __name__ == "__main__":
     livesplit_prediction_process = mp.Process(target=livesplit_predictions, daemon=True, args=(q,CFG))
     livesplit_prediction_process.start()
 
-    read_data()
+    main()
