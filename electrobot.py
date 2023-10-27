@@ -150,7 +150,7 @@ def IRC_reconnect():
     attempts += 1
     
     if attempts == 7:
-        LOG.logger.critical("Couldn't connect to the server, closing...")
+        LOG.logger.critical("Couldn't connect to the IRC server, closing...")
         exit()
 
     IRC_connect()
@@ -247,23 +247,18 @@ def main():
     mods = get_mods()
     pred_is_active = False
 
-    # hotkeys
-    bindings = get_hotkeys()
-    hkeys.register_hotkeys(bindings)
-    hkeys.start_checking_hotkeys()
-    LOG.logger.info('Hotkeys registered')
-
     while True: 
         try: 
             select.select([IRC], [], [], 4)
             
-            if q.qsize() != 0: #from livesplit or eventsub
-                data = q.get() #collision?
+            # data from livesplit or eventsub
+            if q.qsize() != 0: 
+                data = q.get() # collision?
                 
-                if type(data) == AutomaticPrediction.AutomaticPrediction: #livesplit
+                if type(data) == AutomaticPrediction.AutomaticPrediction: 
                     LOG.logger.debug(f"in queue from livesplit: {data.split}")
                     create_prediction(data.split)
-                else: #eventsub
+                else: # type is dict 
                     e_status = data['status'] #.end resolved/canceled
                     outcomes = data['outcomes']
                     winning_id = data['winning_id']
@@ -278,7 +273,7 @@ def main():
                         pred_is_active = False
                         event_prediction_end(outcomes, e_status, winning_id)
             
-            # token validation
+            # token validation check
             current_utc = datetime.datetime.now(datetime.UTC)
             if current_utc >= validate_utc:
                 hourly_validation()
@@ -289,12 +284,13 @@ def main():
                 if current_utc.strftime("%Y-%m-%d %H:%M:%S") >= time_35s_before_lock:
                     irc_send(f"PRIVMSG {CHANNEL} :{PRED_REMINDER_MESSAGE}")
                     pred_is_active = False
-                    
+
+            # checking IRC messages 
             buffer = IRC.recv(1024).decode()
             buffer = buffer.replace(' \U000e0000', '') #happens when spamming?
             msg = buffer.split() #[user, type_msg, channel, message]
 
-            if not buffer: #empty = disconnect
+            if not buffer: # empty = disconnect
                 IRC_reconnect()
                 continue
             
@@ -304,8 +300,9 @@ def main():
             if msg[0] == "PING":
                 LOG.logger.info("Pinged")
                 irc_send(f"PONG {msg[1]}")
-            elif msg[1] == "PRIVMSG": #TODO commands, modcommands, song, pb, wr
+            elif msg[1] == "PRIVMSG":
                 chat_interact(buffer.splitlines(), mods)
+            print("loop")
 
         except ssl.SSLWantReadError: #timeout
             continue
@@ -330,6 +327,13 @@ def hourly_validation():
     else:
         LOG.logger.error(f"hourly_validation: code {http_code} / {http_code2}")
         
+
+def set_hotkeys():
+    bindings = get_hotkeys()
+    hkeys.register_hotkeys(bindings)
+    hkeys.start_checking_hotkeys()
+    LOG.logger.info('Hotkeys registered')
+
 
 def get_hotkeys() -> list:
     while True:
@@ -693,6 +697,8 @@ if __name__ == "__main__":
     validate_token('bot')
     validate_token('broad')
     IRC_connect()
+    set_hotkeys()
+
 
     event_process = mp.Process(target=eventsub, daemon=True, args=(q,))
     event_process.start()
