@@ -64,6 +64,7 @@ def validate_token(br, q=None):
     global token_bot
     global token_broad
     
+    # open token file
     while True:
         try:
             with open(f'tokens/token_{br}.json') as token_file:
@@ -85,6 +86,7 @@ def validate_token(br, q=None):
                 LOG.logger.error("Missing streamer token, run authorize.py to authorize your streamer account then restart the bot")
             input()
     
+    # validate token
     response = requests.get(
         url=f'{TWITCH_AUTH_API}/validate', 
         headers={
@@ -93,7 +95,7 @@ def validate_token(br, q=None):
     )
 
     match response.status_code:
-        case 200: #ok, valid
+        case 200:
             if br == 'bot':
                 token_bot = token['access_token'] #read from token
             else: #broad
@@ -302,7 +304,6 @@ def main():
                 irc_send(f"PONG {msg[1]}")
             elif msg[1] == "PRIVMSG":
                 chat_interact(buffer.splitlines(), mods)
-            print("loop")
 
         except ssl.SSLWantReadError: #timeout
             continue
@@ -550,7 +551,7 @@ def end_prediction(action):
             case 400:
                 LOG.logger.error("end_prediction: 400 Bad Request")
                 break
-            case 401: #try again
+            case 401:
                 validate_token('broad')
             case 404:
                 LOG.logger.error("end_prediction: 404 Not found")
@@ -698,7 +699,6 @@ if __name__ == "__main__":
     validate_token('broad')
     IRC_connect()
     set_hotkeys()
-
 
     event_process = mp.Process(target=eventsub, daemon=True, args=(q,))
     event_process.start()
