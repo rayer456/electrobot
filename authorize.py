@@ -4,19 +4,19 @@ import requests
 import webbrowser
 import json
 import tomli_w
-import logger as LOG
 
+from src import logger as LOG
 from config import config_file as CFG
 
 
-HOST = CFG['socket']['HOST']
-PORT = CFG['socket']['PORT']
-CLIENT_ID = CFG['twitch']['auth']['CLIENT_ID']
-CLIENT_SECRET = CFG['twitch']['auth']['CLIENT_SECRET']
-REDIRECT_URI = CFG['twitch']['auth']['REDIRECT_URI']
-BOT_SCOPE = CFG['twitch']['scopes']['BOT_SCOPE']
-BROAD_SCOPE = CFG['twitch']['scopes']['BROAD_SCOPE']
-CHANNEL = CFG['twitch']['info']['CHANNEL']
+HOST = CFG['socket']['host']
+PORT = CFG['socket']['port']
+CLIENT_ID = CFG['twitch']['auth']['client_id']
+CLIENT_SECRET = CFG['twitch']['auth']['client_secret']
+REDIRECT_URI = CFG['twitch']['auth']['redirect_uri']
+BOT_SCOPE = CFG['twitch']['scopes']['bot_scope']
+BROAD_SCOPE = CFG['twitch']['scopes']['broad_scope']
+CHANNEL = CFG['twitch']['info']['channel']
 
 TOKEN_URL = 'https://id.twitch.tv/oauth2/token'
 AUTHORIZE_URL = 'https://id.twitch.tv/oauth2/authorize'

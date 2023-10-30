@@ -5,8 +5,8 @@ import json
 from PyQt6.QtWidgets import QApplication, QMainWindow, QFileDialog, QMessageBox, QListWidgetItem
 from PyQt6.QtGui import QIcon
 
-from prediction_window_ui import Ui_MainWindow
-from LiveSplitData import LiveSplitData
+from src import Ui_MainWindow
+from src import LiveSplitData
 
 
 class Window(QMainWindow, Ui_MainWindow):

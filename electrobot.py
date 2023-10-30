@@ -13,15 +13,15 @@ from operator import itemgetter
 import global_hotkeys as hkeys
 
 from config import config_file as CFG
-import AutomaticPrediction
-import logger as LOG
+from src import automatic_prediction
+from src import logger as LOG
 
 
-CHANNEL = f"#{CFG['twitch']['info']['CHANNEL']}"
-ACCOUNT = CFG['twitch']['info']['BOT_ACCOUNT'] # can be anything?
-CLIENT_ID = CFG['twitch']['auth']['CLIENT_ID']
-CLIENT_SECRET = CFG['twitch']['auth']['CLIENT_SECRET']
-B_ID = CFG['twitch']['info']['CHANNEL_ID']
+CHANNEL = f"#{CFG['twitch']['info']['channel']}"
+ACCOUNT = CFG['twitch']['info']['bot_account'] # can be anything?
+CLIENT_ID = CFG['twitch']['auth']['client_id']
+CLIENT_SECRET = CFG['twitch']['auth']['client_secret']
+B_ID = CFG['twitch']['info']['channel_id']
 
 TWITCH_AUTH_API = 'https://id.twitch.tv/oauth2'
 TWITCH_API = 'https://api.twitch.tv/helix'
@@ -29,13 +29,18 @@ TWITCH_EVENTSUB = 'wss://eventsub.wss.twitch.tv/ws'
 TWITCH_IRC_HOST = 'irc.chat.twitch.tv'
 TWITCH_IRC_PORT = 6697
 
-PRED_BEGIN_MESSAGE = CFG['messages']['PRED_BEGIN_MESSAGE']
-PRED_REMINDER_MESSAGE = CFG['messages']['PRED_REMINDER_MESSAGE']
-PRED_LOCK_PREFIX = CFG['messages']['PRED_LOCK_PREFIX']
-PRED_LOCK_SUFFIX = CFG['messages']['PRED_LOCK_SUFFIX']
-PRED_WINNER_PREFIX = CFG['messages']['PRED_WINNER_PREFIX']
-PRED_LOSER_PREFIX = CFG['messages']['PRED_LOSER_PREFIX']
-PRED_CANCEL_MESSAGE = CFG['messages']['PRED_CANCEL_MESSAGE']
+PRED_BEGIN_MESSAGE = CFG['messages']['pred_begin_message']
+PRED_REMINDER_MESSAGE = CFG['messages']['pred_reminder_message']
+PRED_LOCK_PREFIX = CFG['messages']['pred_lock_prefix']
+PRED_LOCK_SUFFIX = CFG['messages']['pred_lock_suffix']
+PRED_WINNER_PREFIX = CFG['messages']['pred_winner_prefix']
+PRED_LOSER_PREFIX = CFG['messages']['pred_loser_prefix']
+PRED_CANCEL_MESSAGE = CFG['messages']['pred_cancel_message']
+
+ENABLE_HOTKEYS = CFG['hotkeys']['enabled']
+
+LIVESPLIT_HOST = CFG['livesplit']['host']
+LIVESPLIT_PORT = CFG['livesplit']['port']
 
 
 def refresh_token(refr_token, br=''):
@@ -162,6 +167,10 @@ def irc_send(command):
     IRC.send(f"{command}\n".encode('utf-8'))
 
 
+def chat(message):
+    irc_send(f"PRIVMSG {CHANNEL} :{message}")
+
+
 def get_mods() -> list:
     response = requests.get(
         url=f'{TWITCH_API}/moderation/moderators?broadcaster_id={B_ID}', 
@@ -172,20 +181,20 @@ def get_mods() -> list:
     )
 
     mods = [mod['user_login'] for mod in json.loads(response.text)['data']]
-    mods.append(CFG['twitch']['info']['CHANNEL'])
+    mods.append(CHANNEL)
 
     return mods
 
 
-def event_prediction_begin(locks_at) -> str:
+def event_prediction_begin(locks_at: str) -> str:
     irc_send(f"PRIVMSG {CHANNEL} :{PRED_BEGIN_MESSAGE}")
-    locks_at = locks_at.replace('T', ' ')[:locks_at.find('.')] #formatting
+    locks_at = locks_at.replace('T', ' ')[:locks_at.find('.')]
     locks_at = datetime.datetime.strptime(locks_at, "%Y-%m-%d %H:%M:%S") - datetime.timedelta(seconds=35)
 
     return datetime.datetime.strftime(locks_at, "%Y-%m-%d %H:%M:%S")
 
     
-def event_prediction_lock(outcomes):
+def event_prediction_lock(outcomes: list):
     total_users, total_points = 0, 0
 
     for outcome in outcomes:
@@ -202,10 +211,10 @@ def event_prediction_lock(outcomes):
     irc_send(f"PRIVMSG {CHANNEL} :{PRED_LOCK_PREFIX} {split_string} split ({total_users} users, pool: {total_points:,}) {PRED_LOCK_SUFFIX}")
 
 
-def event_prediction_end(outcomes, e_status, winning_id):
+def event_prediction_end(outcomes: list, e_status: str, winning_id: str):
     if e_status == "resolved":
         losing_outcomes = []
-        all_losers = [] #store all losers in one place
+        all_losers = []
 
         for outcome in outcomes:
             if outcome['id'] == winning_id:
@@ -219,7 +228,8 @@ def event_prediction_end(outcomes, e_status, winning_id):
             else:
                 winner_string = f"{PRED_WINNER_PREFIX} {winner['user_name']} (+{winner['channel_points_won']:,})"
         
-        if len(winning_outcome['top_predictors']) != 0: #if no one won
+        # at least 1 winner
+        if len(winning_outcome['top_predictors']) != 0: 
             irc_send(f"PRIVMSG {CHANNEL} :{winner_string}")
         
         for losing_outcome in losing_outcomes:
@@ -228,17 +238,17 @@ def event_prediction_end(outcomes, e_status, winning_id):
         
         # get 10 biggest losers
         all_losers = sorted(all_losers, key=itemgetter('channel_points_used'), reverse=True)[:10]
-
         for i, loser in enumerate(all_losers):
             if i != 0:
                 loser_string += f", {loser['user_name']} (-{loser['channel_points_used']:,})"
             else:
                 loser_string = f"{PRED_LOSER_PREFIX} {loser['user_name']} (-{loser['channel_points_used']:,})"
         
-        if len(all_losers) != 0: # at least 1 loser
+        # at least 1 loser
+        if len(all_losers) != 0: 
             irc_send(f"PRIVMSG {CHANNEL} :{loser_string}")
         
-    else: # canceled
+    elif e_status == "canceled":
         irc_send(f"PRIVMSG {CHANNEL} :{PRED_CANCEL_MESSAGE}")
 
 
@@ -257,7 +267,7 @@ def main():
             if q.qsize() != 0: 
                 data = q.get() # collision?
                 
-                if type(data) == AutomaticPrediction.AutomaticPrediction: 
+                if type(data) == automatic_prediction.AutomaticPrediction: 
                     LOG.logger.debug(f"in queue from livesplit: {data.split}")
                     create_prediction(data.split)
                 else: # type is dict 
@@ -329,7 +339,7 @@ def hourly_validation():
         LOG.logger.error(f"hourly_validation: code {http_code} / {http_code2}")
         
 
-def set_hotkeys():
+def setup_hotkeys():
     bindings = get_hotkeys()
     hkeys.register_hotkeys(bindings)
     hkeys.start_checking_hotkeys()
@@ -384,17 +394,13 @@ def get_hotkeys() -> list:
 
 
 def use_hotkeys(action: str):
-    response = None
     match action.split():
         case ['lock']:
-            response = end_prediction("LOCK")
+            end_prediction("LOCK")
         case ['resolve', outcome]:
-            response = resolve_prediction(int(outcome))
+            resolve_prediction(int(outcome))
         case ['cancel']:
-            response = end_prediction("CANCEL")
-
-    if response != None: 
-        irc_send(f"PRIVMSG {CHANNEL} :{response}")
+            end_prediction("CANCEL")
 
 
 def chat_interact(buffer, mods): 
@@ -404,36 +410,38 @@ def chat_interact(buffer, mods):
         #print(f"{username}: {chat_msg}")
 
         if username in mods:
-            response = None
             match chat_msg.split():
                 case ["pred", "start", name]:
-                    response = create_prediction(name)
+                    create_prediction(name)
                 case ["pred", "lock"]:
-                    response = end_prediction("LOCK")
+                    end_prediction("LOCK")
                 case ["pred", "outcome", outcome] if 0 < int(outcome) <= 10:
-                    response = resolve_prediction(int(outcome))
-                case ["pred", "cancel"]: #CANCELED 
-                    response = end_prediction("CANCEL")
+                    resolve_prediction(int(outcome), username)
+                case ["pred", "cancel"]:
+                    end_prediction("CANCEL")
                 case ["!modcommands"]:
-                    response = "pred start <name>, pred lock, pred outcome <1-10>, pred cancel"
-
-            if response != None: 
-                irc_send(f"PRIVMSG {CHANNEL} :{response}")
+                    chat(f"{username} -> pred start <name>, pred lock, pred outcome <1-10>, pred cancel")
 
 
 def get_latest_prediction():
     while True:
-        headers = {
-            "Authorization": f"Bearer {token_broad}",
-            "Client-Id": CLIENT_ID
-        }
-        response = requests.get(f'{TWITCH_API}/predictions?broadcaster_id={B_ID}&first=1', headers=headers)
+        response = requests.get(
+            url=f'{TWITCH_API}/predictions', 
+            headers={
+                "Authorization": f"Bearer {token_broad}",
+                "Client-Id": CLIENT_ID
+            },
+            params=f'broadcaster_id={B_ID}&first=1',
+        )
         LOG.logger.debug("get_latest_prediction: request done")
 
         match response.status_code:
             case 200:
                 pred_json = json.loads(response.text)
                 return pred_json
+            case 400:
+                LOG.logger.error(f"get_latest_prediction: 400 Bad Request: {response.text}")
+                break
             case 401: #token expired
                 validate_token('broad')
 
@@ -447,30 +455,33 @@ def create_prediction(pred_name):
     options = ''
     for p in preds['predictions']:
         options += f"{p['name']} "
-        if p['name'] == pred_name: #match
+        if p['name'] == pred_name: # match
             p['data']['broadcaster_id'] = B_ID
-            data = p['data']
+            prediction_data = p['data']
             not_found = False
         
     if not_found:
         LOG.logger.debug("create_prediction: Non-existing prediction")
-        return f"Possibilities: {options}"
+        return chat(f"Possibilities: {options}")
 
     while True:
-        headers = {
-            "Authorization": f"Bearer {token_broad}", 
-            "Client-Id": f"{CLIENT_ID}",
-            "Content-Type": "application/json"
-        }
-        response = requests.post(f'{TWITCH_API}/predictions', json=data, headers=headers)
+        response = requests.post(
+            url=f'{TWITCH_API}/predictions',  
+            headers={
+                "Authorization": f"Bearer {token_broad}", 
+                "Client-Id": CLIENT_ID,
+                "Content-Type": "application/json",
+            },
+            json=prediction_data,
+        )
 
         match response.status_code:
             case 200:
                 LOG.logger.debug("create_prediction: successfully created prediction")
                 break
             case 400: #pred already running
-                LOG.logger.error(response.text)
-                return "Prediction already running"
+                LOG.logger.error(f"create_prediction: 400 Bad Request: {response.text}")
+                return chat("Prediction already running")
             case 401: #expired
                 validate_token('broad')
             case 429:
@@ -478,30 +489,31 @@ def create_prediction(pred_name):
                 break
 
 
-def resolve_prediction(outcome):
+def resolve_prediction(outcome, username=None):
     latest_pred = get_latest_prediction()
     
     #ACTIVE, RESOLVED, CANCELED, LOCKED
     if latest_pred['data'][0]['status'] not in ("ACTIVE", "LOCKED"): 
-        return "No active predictions"
+       return chat(f"{username} -> No active predictions")
 
     if not outcome <= len(latest_pred['data'][0]['outcomes']):
-        return f"{outcome} is not an option"
-
-    data = {
-        "broadcaster_id": B_ID,
-        "id": latest_pred['data'][0]['id'],
-        "status": "RESOLVED",
-        "winning_outcome_id": latest_pred['data'][0]['outcomes'][outcome-1]['id']
-    }
+        return chat(f"{username} -> {outcome} is not an option")
 
     while True:
-        headers = {
-            "Authorization": f"Bearer {token_broad}", 
-            "Client-Id": f"{CLIENT_ID}",
-            "Content-Type": "application/json"
-        }
-        response = requests.patch(f'{TWITCH_API}/predictions', headers=headers, json=data)
+        response = requests.patch(
+            url=f'{TWITCH_API}/predictions', 
+            headers={
+                "Authorization": f"Bearer {token_broad}", 
+                "Client-Id": f"{CLIENT_ID}",
+                "Content-Type": "application/json"
+            }, 
+            json={
+                "broadcaster_id": B_ID,
+                "id": latest_pred['data'][0]['id'],
+                "status": "RESOLVED",
+                "winning_outcome_id": latest_pred['data'][0]['outcomes'][outcome-1]['id']
+            }
+        )
 
         match response.status_code:
             case 200:
@@ -519,42 +531,43 @@ def resolve_prediction(outcome):
 
 def end_prediction(action):
     latest_pred = get_latest_prediction()
-
     status = latest_pred['data'][0]['status'] 
+
     match action:
         case "LOCK":
             if status != "ACTIVE":
                 if status == "LOCKED":
-                    return "Already locked"
-                return "No active predictions"
+                    return chat("Already locked")
+                return chat("No active predictions")
         case "CANCEL":
             if status not in ("ACTIVE", "LOCKED"):
-                return "No active predictions"
-            
-    data = {
-        "broadcaster_id": B_ID,
-        "id": latest_pred['data'][0]['id'],
-        "status": f"{action}ED" #LOCK or CANCEL
-    }
+                return chat("No active predictions")
 
     while True:
-        headers = {
-            "Authorization": f"Bearer {token_broad}", 
-            "Client-Id": f"{CLIENT_ID}",
-            "Content-Type": "application/json"
-        }
-        response = requests.patch(f'{TWITCH_API}/predictions', headers=headers, json=data)
+        response = requests.patch(
+            url=f'{TWITCH_API}/predictions', 
+            headers={
+                "Authorization": f"Bearer {token_broad}", 
+                "Client-Id": CLIENT_ID,
+                "Content-Type": "application/json"
+            }, 
+            json={
+                "broadcaster_id": B_ID,
+                "id": latest_pred['data'][0]['id'],
+                "status": f"{action}ED" #LOCK or CANCEL
+            }
+        )
 
         match response.status_code:
             case 200:
                 break
             case 400:
-                LOG.logger.error("end_prediction: 400 Bad Request")
+                LOG.logger.error(f"end_prediction: 400 Bad Request: {response.text}")
                 break
             case 401:
                 validate_token('broad')
             case 404:
-                LOG.logger.error("end_prediction: 404 Not found")
+                LOG.logger.error(f"end_prediction: 404 Not found: {response.text}")
                 break
         
 
@@ -610,7 +623,7 @@ async def event_handler(q):
             continue
 
 
-def queue_event_object(q, buffer): #parsing data to write to chat
+def queue_event_object(q: mp.Queue, buffer): #parsing data to write to chat
     event_type = buffer['payload']['subscription']['type']
     outcomes = buffer['payload']['event']['outcomes']
     e_status = ""
@@ -683,9 +696,9 @@ def eventsub(q):
     asyncio.run(event_handler(q))
 
 
-def livesplit_predictions(q, CFG):
-    auto_prediction_launcher = AutomaticPrediction.Launcher()
-    auto_prediction_launcher.launch(q, CFG, LOG)
+def livesplit_predictions(q):
+    auto_prediction_launcher = automatic_prediction.Launcher()
+    auto_prediction_launcher.launch(q, LOG, LIVESPLIT_HOST, LIVESPLIT_PORT)
 
 
 if __name__ == "__main__":
@@ -698,12 +711,14 @@ if __name__ == "__main__":
     validate_token('bot')
     validate_token('broad')
     IRC_connect()
-    set_hotkeys()
+
+    if ENABLE_HOTKEYS:
+        setup_hotkeys()
 
     event_process = mp.Process(target=eventsub, daemon=True, args=(q,))
     event_process.start()
 
-    livesplit_prediction_process = mp.Process(target=livesplit_predictions, daemon=True, args=(q,CFG))
+    livesplit_prediction_process = mp.Process(target=livesplit_predictions, daemon=True, args=(q,))
     livesplit_prediction_process.start()
 
     main()

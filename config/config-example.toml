@@ -1,30 +1,33 @@
 [twitch.auth]
-CLIENT_ID = "YOUR_CLIENT_ID"
-CLIENT_SECRET = "YOUR_CLIENT_SECRET"
-REDIRECT_URI = "http://localhost:8777" # must match HOST/PORT in [socket] 
+client_id = 'YOUR_CLIENT_ID'
+client_secret = 'YOUR_CLIENT_SECRET'
+redirect_uri = 'http://localhost:8777' # must match HOST/PORT in [socket] 
 
 [twitch.info]
-CHANNEL = "YOUR_CHANNEL_NAME" # must be lowercase
-BOT_ACCOUNT = "YOUR_BOT_NAME"
-CHANNEL_ID = ""
+channel = 'YOUR_CHANNEL_NAME' # must be lowercase
+bot_account = 'YOUR_BOT_NAME'
+channel_id = ''
 
 [twitch.scopes]
-BOT_SCOPE = "chat%3Aread+chat%3Aedit"
-BROAD_SCOPE = "channel%3Amanage%3Apredictions+moderation%3Aread"
+bot_scope = 'chat%3Aread+chat%3Aedit'
+broad_scope = 'channel%3Amanage%3Apredictions+moderation%3Aread'
 
 [messages]
-PRED_BEGIN_MESSAGE = '🎰🚨🎰BETS ARE OPEN, any gamblers? modCheck 🎰🚨🎰'
-PRED_REMINDER_MESSAGE = '🚨30 seconds left VeryPog make your bets NOW🚨'
-PRED_LOCK_PREFIX = '🎰BETS ARE CLOSED🎰'
-PRED_LOCK_SUFFIX = 'PauseFish'
-PRED_WINNER_PREFIX = 'GIGACHAD'
-PRED_LOSER_PREFIX = 'xdd'
-PRED_CANCEL_MESSAGE = 'Prediction canceled SadgeCry'
+pred_begin_message = '🎰🚨🎰BETS ARE OPEN, any gamblers? modCheck 🎰🚨🎰'
+pred_reminder_message = '🚨30 seconds left VeryPog make your bets NOW🚨'
+pred_lock_prefix = '🎰BETS ARE CLOSED🎰'
+pred_lock_suffix = 'PauseFish'
+pred_winner_prefix = 'GIGACHAD'
+pred_loser_prefix = 'xdd'
+pred_cancel_message = 'Prediction canceled SadgeCry'
+
+[hotkeys]
+enabled = true
 
 [socket]
-HOST = "127.0.0.1" # localhost
-PORT = 8777
+host = '127.0.0.1' # localhost
+port = 8777
 
 [livesplit]
-HOST = "127.0.0.1"
-PORT = 16834
+host = '127.0.0.1'
+port = 16834

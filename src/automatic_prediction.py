@@ -23,10 +23,10 @@ class Launcher():
         ]
 
 
-    def launch(self, q, CFG, LOG):
+    def launch(self, q, LOG, host, port):
         try:
             with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
-                sock.connect((CFG['livesplit']['HOST'], CFG['livesplit']['PORT']))
+                sock.connect((host, port))
                 sock.settimeout(0.5)
                 LOG.logger.info("Connected to Livesplit Server")
 
@@ -52,11 +52,9 @@ class Launcher():
                         self.get_auto_predictions()
                         continue
         except ConnectionRefusedError:
-            LOG.logger.warning("Predictions will not start automatically by split")
-            LOG.logger.warning("Start Livesplit Server and restart the bot")
+            LOG.logger.warning("Predictions will not start automatically by split, start Livesplit Server and restart the bot")
         except ConnectionAbortedError:
-            LOG.logger.error("Connection to Livesplit Server was aborted")
-            LOG.logger.error("Will continue without automatic predictions")
+            LOG.logger.error("Connection to Livesplit Server was aborted, will continue without automatic predictions")
 
     def convert_to_hms(self, raw_time):
         hms_list = raw_time.split(':') #[1,22,33] or [18,16]
