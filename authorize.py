@@ -6,6 +6,7 @@ import json
 import tomli_w
 
 from src import logger as LOG
+from src import TokenType
 from config import config_file as CFG
 
 
@@ -23,22 +24,22 @@ AUTHORIZE_URL = 'https://id.twitch.tv/oauth2/authorize'
 TWITCH_API = 'https://api.twitch.tv/helix'
 
 
-def get_code(type_token):
+def get_code(type_token: TokenType):
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
         sock.bind((HOST, PORT))
         sock.listen()
         LOG.logger.debug(f"Authorize: Listening on {HOST} on port {PORT}")
 
-        if type_token == 'bot':
+        if type_token == TokenType.BOT:
             authorize(BOT_SCOPE)
-        else: #broad
+        elif type_token == TokenType.BROADCASTER:
             authorize(BROAD_SCOPE)
         LOG.logger.info("Browser opened, displaying authorization page")
 
-        conn = sock.accept()[0] #blocking socket
+        conn = sock.accept()[0] # blocking socket
         with conn:
             while True:
-                data = conn.recv(1024).decode('utf-8') #waiting
+                data = conn.recv(1024).decode('utf-8') # waiting
                 if not data:
                     LOG.logger.error("Connection dropped?")
                     break
@@ -58,6 +59,8 @@ def get_code(type_token):
                 y = data.splitlines()[0].split()[1] 
                 if y[y.find('?')+1:y.find('=')] == "error":
                     LOG.logger.error(f'Message: {y}')
+                    input()
+                    exit()
                 else:
                     secret = y[y.find('=')+1:y.find('&')]
                     
@@ -71,7 +74,7 @@ def authorize(scope):
     webbrowser.open(link)
 
 
-def get_token(code, type_token):
+def get_token(code: str, type_token: TokenType):
     response = requests.post(
         url=TOKEN_URL, 
         headers={
@@ -86,10 +89,10 @@ def get_token(code, type_token):
             if not os.path.exists('tokens'):
                 os.makedirs('tokens')
 
-            with open(f'tokens/token_{type_token}.json', 'w') as file: 
+            with open(f'tokens/token_{type_token.value}.json', 'w') as file: 
                 file.write(response.text)
 
-            if type_token == 'broad':
+            if type_token == TokenType.BROADCASTER:
                 data = json.loads(response.text)
                 set_channel_id(data['access_token'])
 
@@ -103,11 +106,11 @@ def get_token(code, type_token):
             LOG.logger.error(f"Token {response.status_code}: {response.text}")
 
 
-def set_channel_id(token_broad):
+def set_channel_id(access_token):
     response = requests.get(
         url=f'{TWITCH_API}/users?login={CHANNEL}', 
         headers={
-            "Authorization": f"Bearer {token_broad}", 
+            "Authorization": f"Bearer {access_token}", 
             "Client-Id": f"{CLIENT_ID}"
         }
     )
@@ -115,12 +118,12 @@ def set_channel_id(token_broad):
     match response.status_code:
         case 200:
             data = json.loads(response.text)
-            CFG['twitch']['info']['CHANNEL_ID'] = data['data'][0]['id']
+            CFG['twitch']['info']['channel_id'] = data['data'][0]['id']
 
             with open('config/config.toml', 'wb') as file:
                 tomli_w.dump(CFG ,file)
         case _:
-            LOG.logger.error(f'Set_channel_id: {response.status_code}: {response.text}')
+            LOG.logger.error(f'set_channel_id: {response.status_code}: {response.text}')
 
 
 if __name__ == "__main__":
@@ -140,7 +143,7 @@ if __name__ == "__main__":
         choice = input("[+] bot or streamer?\t")
 
     if choice == 'bot':
-        get_code('bot')
+        get_code(TokenType.BOT)
     else:
-        get_code('broadcaster')
+        get_code(TokenType.BROADCASTER)
     input()
