@@ -142,5 +142,5 @@ if __name__ == "__main__":
     if choice == 'bot':
         get_code('bot')
     else:
-        get_code('broad')
+        get_code('broadcaster')
     input()
