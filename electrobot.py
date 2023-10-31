@@ -7,6 +7,7 @@ import asyncio
 import ssl
 import json
 import multiprocessing as mp
+from multiprocessing.managers import BaseManager
 import select
 import datetime
 from operator import itemgetter
@@ -52,7 +53,7 @@ def IRC_connect():
     IRC = context.wrap_socket(sock, server_hostname=TWITCH_IRC_HOST)
     IRC.setblocking(False)
 
-    IRC_send(f"PASS oauth:{token_bot.access_token}")
+    IRC_send(f"PASS oauth:{token_bot.get_access_token()}")
     IRC_send(f"NICK {ACCOUNT}")
     IRC_send(f"JOIN {CHANNEL}")
 
@@ -90,7 +91,7 @@ def get_mods() -> list:
     response = requests.get(
         url=f'{TWITCH_API}/moderation/moderators?broadcaster_id={CHANNEL_ID}', 
         headers={
-            "Authorization": f"Bearer {token_broad.access_token}", 
+            "Authorization": f"Bearer {token_broad.get_access_token()}", 
             "Client-Id": f"{CLIENT_ID}",
         }
     )
@@ -184,7 +185,7 @@ def main():
                 
                 if type(data) == automatic_prediction.AutomaticPrediction: 
                     LOG.logger.debug(f"in queue from livesplit: {data.split}")
-                    create_prediction(data.split)
+                    create_prediction(data.split, "Livesplit")
                 elif type(data) == dict: # type is dict 
                     e_status = data['status'] #.end resolved/canceled
                     outcomes = data['outcomes']
@@ -199,9 +200,6 @@ def main():
                     elif data['type'].endswith("end"):
                         pred_is_active = False
                         event_prediction_end(outcomes, e_status, winning_id)
-                elif type(data) == Token:
-                    if data.token_type == TokenType.BROADCASTER:
-                        token_broad = data
             
             # token validation check
             current_utc = datetime.datetime.now(datetime.UTC)
@@ -309,29 +307,29 @@ def get_hotkeys() -> list:
 def use_hotkeys(action: str):
     match action.split():
         case ['lock']:
-            end_prediction("LOCK")
+            end_prediction("LOCK", CHANNEL.removeprefix('#'))
         case ['resolve', outcome]:
-            resolve_prediction(int(outcome))
+            resolve_prediction(int(outcome), CHANNEL.removeprefix('#'))
         case ['cancel']:
-            end_prediction("CANCEL")
+            end_prediction("CANCEL", CHANNEL.removeprefix('#'))
 
 
 def chat_interact(buffer, mods): 
-    for i in buffer: #possibly multiple messages
+    for i in buffer: # possibly multiple messages
         username = i[i.find(':')+1:i.find('!')]
         chat_msg = i[i.find(':', 1)+1:]
-        #print(f"{username}: {chat_msg}")
+        # print(f"{username}: {chat_msg}")
 
         if username in mods:
             match chat_msg.split():
                 case ["pred", "start", name]:
-                    create_prediction(name)
+                    create_prediction(name, username)
                 case ["pred", "lock"]:
-                    end_prediction("LOCK")
+                    end_prediction("LOCK", username)
                 case ["pred", "outcome", outcome] if 0 < int(outcome) <= 10:
                     resolve_prediction(int(outcome), username)
                 case ["pred", "cancel"]:
-                    end_prediction("CANCEL")
+                    end_prediction("CANCEL", username)
                 case ["!modcommands"]:
                     chat(f"{username} -> pred start <name>, pred lock, pred outcome <1-10>, pred cancel")
 
@@ -341,7 +339,7 @@ def get_latest_prediction():
         response = requests.get(
             url=f'{TWITCH_API}/predictions', 
             headers={
-                "Authorization": f"Bearer {token_broad.access_token}",
+                "Authorization": f"Bearer {token_broad.get_access_token()}",
                 "Client-Id": CLIENT_ID
             },
             params=f'broadcaster_id={CHANNEL_ID}&first=1',
@@ -359,7 +357,7 @@ def get_latest_prediction():
                 token_broad.validate()
 
 
-def create_prediction(pred_name):
+def create_prediction(pred_name, username):
     with open('predictions/predictions.json', 'r') as file:
         preds = json.load(file)
     LOG.logger.debug("create_prediction: Read predictions.json")
@@ -375,13 +373,13 @@ def create_prediction(pred_name):
         
     if not_found:
         LOG.logger.debug("create_prediction: Non-existing prediction")
-        return chat(f"Possibilities: {options}")
+        return chat(f"{username} -> Possibilities: {options}")
 
     while True:
         response = requests.post(
             url=f'{TWITCH_API}/predictions',  
             headers={
-                "Authorization": f"Bearer {token_broad.access_token}", 
+                "Authorization": f"Bearer {token_broad.get_access_token()}", 
                 "Client-Id": CLIENT_ID,
                 "Content-Type": "application/json",
             },
@@ -394,7 +392,7 @@ def create_prediction(pred_name):
                 break
             case 400: # most likely pred already running
                 LOG.logger.error(f"create_prediction: 400 Bad Request: {response.text}")
-                return chat("Prediction already running")
+                return chat(f"{username} -> Prediction already running")
             case 401: # expired
                 token_broad.validate()
             case 429:
@@ -402,7 +400,7 @@ def create_prediction(pred_name):
                 break
 
 
-def resolve_prediction(outcome, username=None):
+def resolve_prediction(outcome, username):
     latest_pred = get_latest_prediction()
     
     #ACTIVE, RESOLVED, CANCELED, LOCKED
@@ -416,7 +414,7 @@ def resolve_prediction(outcome, username=None):
         response = requests.patch(
             url=f'{TWITCH_API}/predictions', 
             headers={
-                "Authorization": f"Bearer {token_broad.access_token}", 
+                "Authorization": f"Bearer {token_broad.get_access_token()}", 
                 "Client-Id": f"{CLIENT_ID}",
                 "Content-Type": "application/json"
             }, 
@@ -442,7 +440,7 @@ def resolve_prediction(outcome, username=None):
                 break
 
 
-def end_prediction(action):
+def end_prediction(action, username):
     latest_pred = get_latest_prediction()
     status = latest_pred['data'][0]['status'] 
 
@@ -450,17 +448,17 @@ def end_prediction(action):
         case "LOCK":
             if status != "ACTIVE":
                 if status == "LOCKED":
-                    return chat("Already locked")
-                return chat("No active predictions")
+                    return chat(f"{username} -> Already locked")
+                return chat(f"{username} -> No active predictions")
         case "CANCEL":
             if status not in ("ACTIVE", "LOCKED"):
-                return chat("No active predictions")
+                return chat(f"{username} -> No active predictions")
 
     while True:
         response = requests.patch(
             url=f'{TWITCH_API}/predictions', 
             headers={
-                "Authorization": f"Bearer {token_broad.access_token}", 
+                "Authorization": f"Bearer {token_broad.get_access_token()}", 
                 "Client-Id": CLIENT_ID,
                 "Content-Type": "application/json"
             }, 
@@ -498,9 +496,9 @@ async def event_handler(q: mp.Queue, token_broad: Token):
                             LOG.logger.info("Eventsub: welcome")
                             
                             session_id = buffer['payload']['session']['id']
-                            sub_to_event(q, session_id, "channel.prediction.begin", token_broad)
-                            sub_to_event(q, session_id, "channel.prediction.lock", token_broad)
-                            sub_to_event(q, session_id, "channel.prediction.end", token_broad)
+                            sub_to_event(session_id, "channel.prediction.begin", token_broad)
+                            sub_to_event(session_id, "channel.prediction.lock", token_broad)
+                            sub_to_event(session_id, "channel.prediction.end", token_broad)
 
                             LOG.logger.info("Listening for events...")
                         case 'session_keepalive': continue # every 10s
@@ -556,13 +554,12 @@ def queue_event_object(q: mp.Queue, buffer: dict): # preparing data
     q.put(data)
 
 
-def sub_to_event(q: mp.Queue, session_id, event_type, token_broad: Token):
-    print(token_broad)
+def sub_to_event(session_id, event_type, token_broad: Token):
     while True:
         response = requests.post(
             url=f'{TWITCH_API}/eventsub/subscriptions', 
             headers={
-                "Authorization": f"Bearer {token_broad.access_token}", 
+                "Authorization": f"Bearer {token_broad.get_access_token()}", 
                 "Client-Id": f"{CLIENT_ID}",
                 "Content-Type": "application/json"
             }, 
@@ -589,9 +586,6 @@ def sub_to_event(q: mp.Queue, session_id, event_type, token_broad: Token):
             case 401:
                 LOG.logger.warning("Eventsub: Unauthorized")
                 token_broad.validate()
-
-                print(token_broad.access_token)
-                q.put(token_broad)
             case 403:
                 LOG.logger.error("Eventsub: missing scopes")
                 break
@@ -601,8 +595,6 @@ def sub_to_event(q: mp.Queue, session_id, event_type, token_broad: Token):
 
 
 def eventsub(q: mp.Queue, token_broad: Token):
-    token_broad.access_token = "SHIT"
-    print(token_broad.access_token)
     asyncio.run(event_handler(q, token_broad))
 
 
@@ -619,10 +611,15 @@ if __name__ == "__main__":
 
     q = mp.Queue()
 
+    # shared memory for token
+    BaseManager.register('Token', Token)
+    manager = BaseManager()
+    manager.start()
+
     # implicit validation when initializing
-    token_broad = Token(TokenType.BROADCASTER)
-    token_bot = Token(TokenType.BOT)
-    
+    token_broad: Token = manager.Token(TokenType.BROADCASTER)
+    token_bot: Token = manager.Token(TokenType.BOT)
+
     IRC_connect()
 
     if HOTKEYS_ENABLED:
@@ -635,4 +632,3 @@ if __name__ == "__main__":
     livesplit_prediction_process.start()
 
     main()
-    print(token_broad.access_token)

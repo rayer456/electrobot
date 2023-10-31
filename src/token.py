@@ -96,3 +96,6 @@ class Token():
 
         return response.status_code
     
+
+    def get_access_token(self):
+        return self.access_token
