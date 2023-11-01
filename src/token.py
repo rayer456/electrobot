@@ -20,26 +20,22 @@ class TokenType(Enum):
 
 class Token():
     def __init__(self, token_type: TokenType):
-        while True:
-            try:
-                with open(f'tokens/token_{token_type.value}.json') as file:
-                    token_file = json.load(file)
-                    break
-            except json.JSONDecodeError: # not readable
-                LOG.logger.error("Unreadable file, removing bad file")
-                if token_type == TokenType.BOT:
-                    LOG.logger.info("Run authorize.py to authorize your bot account then restart the bot")
-                else:
-                    LOG.logger.info("Run authorize.py to authorize your streamer account then restart the bot")
-                
-                os.remove(f'tokens/token_{token_type.value}.json')
-                input()
-            except FileNotFoundError:
-                if token_type == TokenType.BOT:
-                    LOG.logger.error("Missing bot token, run authorize.py to authorize your bot account then restart the bot")
-                else:
-                    LOG.logger.error("Missing streamer token, run authorize.py to authorize your streamer account then restart the bot")
-                input()
+        try:
+            with open(f'tokens/token_{token_type.value}.json') as file:
+                token_file = json.load(file)
+        except json.JSONDecodeError: # not readable
+            LOG.logger.error("Unreadable file, removing bad file")
+            if token_type == TokenType.BOT:
+                LOG.logger.info("Run authorize.py to authorize your bot account then restart the bot")
+            else:
+                LOG.logger.info("Run authorize.py to authorize your streamer account then restart the bot")
+            
+            os.remove(f'tokens/token_{token_type.value}.json')
+        except FileNotFoundError:
+            if token_type == TokenType.BOT:
+                LOG.logger.error("Missing bot token, run authorize.py to authorize your bot account then restart the bot")
+            else:
+                LOG.logger.error("Missing streamer token, run authorize.py to authorize your streamer account then restart the bot")
 
         self.access_token: str = token_file['access_token']
         self.refresh_token: str = token_file['refresh_token']
@@ -80,13 +76,12 @@ class Token():
 
         match response.status_code:
             case 200:
-                # why reassign when 200?? self.access_token = token['access_token']
                 LOG.logger.info(f"{self.token_type} TOKEN VALIDATED")
-            case 401: # expired
+            case 401: # access token expired
                 LOG.logger.info(f"{self.token_type} Token expired, refreshing...")
 
                 self.refresh()
-                with open(f'tokens/token_{self.token_type.value}.json') as file:
+                with open(f'tokens/token_{self.token_type.value}.json', 'r') as file:
                     token = json.load(file)
 
                 self.access_token = token['access_token']

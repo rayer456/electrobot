@@ -20,7 +20,7 @@ from src import logger as LOG
 
 
 CHANNEL = f"#{CFG['twitch']['info']['channel']}"
-ACCOUNT = CFG['twitch']['info']['bot_account'] # can be anything?
+BOT_ACCOUNT = CFG['twitch']['info']['bot_account'] # can be anything?
 CLIENT_ID = CFG['twitch']['auth']['client_id']
 CLIENT_SECRET = CFG['twitch']['auth']['client_secret']
 CHANNEL_ID = CFG['twitch']['info']['channel_id']
@@ -54,7 +54,7 @@ def IRC_connect():
     IRC.setblocking(False)
 
     IRC_send(f"PASS oauth:{token_bot.get_access_token()}")
-    IRC_send(f"NICK {ACCOUNT}")
+    IRC_send(f"NICK {BOT_ACCOUNT}")
     IRC_send(f"JOIN {CHANNEL}")
 
     LOG.logger.info("Connected to IRC Chat")
@@ -616,9 +616,12 @@ if __name__ == "__main__":
     manager = BaseManager()
     manager.start()
 
-    # implicit validation when initializing
-    token_broad: Token = manager.Token(TokenType.BROADCASTER)
-    token_bot: Token = manager.Token(TokenType.BOT)
+    # weird exception thing because manager?
+    try:
+        token_broad: Token = manager.Token(TokenType.BROADCASTER)
+        token_bot: Token = manager.Token(TokenType.BOT)
+    except Exception:
+        input()
 
     IRC_connect()
 
