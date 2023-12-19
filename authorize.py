@@ -99,7 +99,7 @@ def get_token(code: str, type_token: TokenType):
             LOG.logger.info("Stored tokens")
             print("\n[+] All done!")
         case 400:
-            LOG.logger.error("Token: Invalid client_id or code or grant_type")
+            LOG.logger.error(f"Token {response.status_code}: {response.text}")
         case 403:
             LOG.logger.error("Token: Invalid client secret")
         case _:

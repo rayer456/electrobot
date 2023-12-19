@@ -1,4 +1,3 @@
-import os
 import time
 import requests
 import socket
@@ -11,6 +10,7 @@ from multiprocessing.managers import BaseManager
 import select
 import datetime
 from operator import itemgetter
+
 import global_hotkeys as hkeys
 
 from config import config_file as CFG
@@ -38,6 +38,10 @@ PRED_LOCK_SUFFIX = CFG['messages']['pred_lock_suffix']
 PRED_WINNER_PREFIX = CFG['messages']['pred_winner_prefix']
 PRED_LOSER_PREFIX = CFG['messages']['pred_loser_prefix']
 PRED_CANCEL_MESSAGE = CFG['messages']['pred_cancel_message']
+ACTION_DENIED_MESSAGE = CFG['messages']['action_denied_message']
+
+GRANT_MODS = CFG['permissions']['grant_mods']
+GRANT_VIPS = CFG['permissions']['grant_vips']
 
 HOTKEYS_ENABLED = CFG['hotkeys']['enabled']
 
@@ -56,6 +60,8 @@ def IRC_connect():
     IRC_send(f"PASS oauth:{token_bot.get_access_token()}")
     IRC_send(f"NICK {BOT_ACCOUNT}")
     IRC_send(f"JOIN {CHANNEL}")
+    # requesting tags
+    IRC_send("CAP REQ :twitch.tv/commands twitch.tv/tags")
 
     LOG.logger.info("Connected to IRC Chat")
 
@@ -85,21 +91,6 @@ def IRC_send(command):
 
 def chat(message):
     IRC_send(f"PRIVMSG {CHANNEL} :{message}")
-
-
-def get_mods() -> list:
-    response = requests.get(
-        url=f'{TWITCH_API}/moderation/moderators?broadcaster_id={CHANNEL_ID}', 
-        headers={
-            "Authorization": f"Bearer {token_broad.get_access_token()}", 
-            "Client-Id": f"{CLIENT_ID}",
-        }
-    )
-
-    mods = [mod['user_login'] for mod in json.loads(response.text)['data']]
-    mods.append(CHANNEL.removeprefix('#'))
-
-    return mods
 
 
 def event_prediction_begin(locks_at: str) -> str:
@@ -172,7 +163,6 @@ def main():
     global delay, attempts, token_broad
 
     validate_utc = datetime.datetime.now(datetime.UTC) + datetime.timedelta(seconds=3600)
-    mods = get_mods()
     pred_is_active = False
 
     while True: 
@@ -215,8 +205,8 @@ def main():
 
             # checking IRC messages 
             buffer = IRC.recv(1024).decode()
-            buffer = buffer.replace(' \U000e0000', '') #happens when spamming?
-            msg = buffer.split() #[user, type_msg, channel, message]
+            buffer = buffer.replace(' \U000e0000', '') # happens when spamming?
+            msg = buffer.split()
 
             if not buffer: # empty = disconnect
                 IRC_reconnect()
@@ -228,10 +218,10 @@ def main():
             if msg[0] == "PING":
                 LOG.logger.info("Pinged")
                 IRC_send(f"PONG {msg[1]}")
-            elif msg[1] == "PRIVMSG":
-                chat_interact(buffer.splitlines(), mods)
+            elif msg[2] == "PRIVMSG":
+                chat_interact(buffer.splitlines())
 
-        except ssl.SSLWantReadError: #timeout
+        except ssl.SSLWantReadError: # timeout
             continue
         except KeyboardInterrupt:
             LOG.logger.info("Closing bot...")
@@ -314,13 +304,31 @@ def use_hotkeys(action: str):
             end_prediction("CANCEL", CHANNEL.removeprefix('#'))
 
 
-def chat_interact(buffer, mods): 
-    for i in buffer: # possibly multiple messages
-        username = i[i.find(':')+1:i.find('!')]
-        chat_msg = i[i.find(':', 1)+1:]
+def chat_interact(buffer): 
+    # possibly multiple messages
+    for i in buffer: 
+        tags = i.split()[0]
+
+        # mod tag is always there
+        is_mod = bool(int(tags[tags.find(';mod=')+5:tags.find(';mod=')+6]))
+
+        # broadcaster tag isn't always there
+        if tags.find('broadcaster/') == -1:
+            is_streamer = False
+        else:
+            is_streamer = True
+
+        # vip tag isn't always there
+        if tags.find(';vip=') == -1:
+            is_vip = False
+        else:
+            is_vip = bool(int(tags[tags.find(';vip=')+5:tags.find(';vip=')+6]))
+
+        username = i[i.find(' :')+2:i.find('!')]
+        chat_msg = i[i.find(f'{CHANNEL} :') + len(CHANNEL) + 2:]
         # print(f"{username}: {chat_msg}")
 
-        if username in mods:
+        if (GRANT_MODS and is_mod) or (GRANT_VIPS and is_vip) or is_streamer:
             match chat_msg.split():
                 case ["pred", "start", name]:
                     create_prediction(name, username)
@@ -332,6 +340,8 @@ def chat_interact(buffer, mods):
                     end_prediction("CANCEL", username)
                 case ["!modcommands"]:
                     chat(f"{username} -> pred start <name>, pred lock, pred outcome <1-10>, pred cancel")
+        elif (not GRANT_MODS and is_mod) or (not GRANT_VIPS and is_vip):
+            chat(f"{username} -> {ACTION_DENIED_MESSAGE}")
 
 
 def get_latest_prediction():

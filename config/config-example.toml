@@ -1,7 +1,7 @@
 [twitch.auth]
 client_id = 'YOUR_CLIENT_ID'
 client_secret = 'YOUR_CLIENT_SECRET'
-redirect_uri = 'http://localhost:8777' # must match HOST/PORT in [socket] 
+redirect_uri = 'http://localhost:8777' # must match host/port in [socket] 
 
 [twitch.info]
 channel = 'YOUR_CHANNEL_NAME' # must be lowercase
@@ -20,6 +20,11 @@ pred_lock_suffix = 'PauseFish'
 pred_winner_prefix = 'GIGACHAD'
 pred_loser_prefix = 'xdd'
 pred_cancel_message = 'Prediction canceled SadgeCry'
+action_denied_message = "You can't do that :)"
+
+[permissions]
+grant_mods = true
+grant_vips = false
 
 [hotkeys]
 enabled = true
