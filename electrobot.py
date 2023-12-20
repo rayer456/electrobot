@@ -22,7 +22,6 @@ from src import logger as LOG
 CHANNEL = f"#{CFG['twitch']['info']['channel']}"
 BOT_ACCOUNT = CFG['twitch']['info']['bot_account'] # can be anything?
 CLIENT_ID = CFG['twitch']['auth']['client_id']
-CLIENT_SECRET = CFG['twitch']['auth']['client_secret']
 CHANNEL_ID = CFG['twitch']['info']['channel_id']
 
 TWITCH_AUTH_API = 'https://id.twitch.tv/oauth2'
