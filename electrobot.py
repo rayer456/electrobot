@@ -24,7 +24,6 @@ BOT_ACCOUNT = CFG['twitch']['info']['bot_account'] # can be anything?
 CLIENT_ID = CFG['twitch']['auth']['client_id']
 CHANNEL_ID = CFG['twitch']['info']['channel_id']
 
-TWITCH_AUTH_API = 'https://id.twitch.tv/oauth2'
 TWITCH_API = 'https://api.twitch.tv/helix'
 TWITCH_EVENTSUB = 'wss://eventsub.wss.twitch.tv/ws'
 TWITCH_IRC_HOST = 'irc.chat.twitch.tv'
@@ -43,6 +42,7 @@ GRANT_MODS = CFG['permissions']['grant_mods']
 GRANT_VIPS = CFG['permissions']['grant_vips']
 
 HOTKEYS_ENABLED = CFG['hotkeys']['enabled']
+HOTKEYS: dict = CFG['hotkeys']
 
 LIVESPLIT_HOST = CFG['livesplit']['host']
 LIVESPLIT_PORT = CFG['livesplit']['port']
@@ -247,50 +247,22 @@ def setup_hotkeys():
 
 
 def get_hotkeys() -> list:
-    while True:
-        try:
-            with open('config/bindings.json', 'r') as file:
-                bindings = json.load(file)
-            
-            hotkeys = [{
-                'hotkey': binding['hotkey'],
-                'on_press_callback': use_hotkeys,
-                'on_release_callback': None,
-                'actuate_on_partial_release': False,
-                'callback_params': binding['action']
-            } for binding in bindings]
+    hotkeys_copy = HOTKEYS.copy()
+    hotkeys_copy.pop('enabled')
+    hotkey: str
+    for hotkey in hotkeys_copy.keys():
+        if '_' in hotkey:
+            hotkeys_copy[hotkey.replace('_', ' ')] = hotkeys_copy.pop(hotkey)
 
-            return hotkeys
-        
-        except FileNotFoundError:
-            default_bindings = [
-                {
-                    'hotkey': 'control + 1',
-                    'action': 'resolve 1',
-                },
-                {
-                    'hotkey': 'control + 2',
-                    'action': 'resolve 2',
-                },
-                {
-                    'hotkey': 'control + 3',
-                    'action': 'resolve 3',
-                },
-                {
-                    'hotkey': 'control + 4',
-                    'action': 'resolve 4',
-                },
-                {
-                    'hotkey': 'control + 5',
-                    'action': 'lock',
-                },
-                {
-                    'hotkey': 'control + 6',
-                    'action': 'cancel',
-                },
-            ]
-            with open('config/bindings.json', 'w') as file:
-                file.write(json.dumps(default_bindings))
+    hotkeys = [{
+        'hotkey': hotkeys_copy[hotkey],
+        'on_press_callback': use_hotkeys,
+        'on_release_callback': None,
+        'actuate_on_partial_release': False,
+        'callback_params': hotkey
+    } for hotkey in hotkeys_copy]
+
+    return hotkeys
 
 
 def use_hotkeys(action: str):
@@ -304,7 +276,7 @@ def use_hotkeys(action: str):
 
 
 def chat_interact(buffer): 
-    # possibly multiple messages
+    # buffer can contain multiple messages
     for i in buffer: 
         tags = i.split()[0]
 
@@ -312,9 +284,8 @@ def chat_interact(buffer):
         is_mod = bool(int(tags[tags.find(';mod=')+5:tags.find(';mod=')+6]))
 
         # broadcaster tag isn't always there
-        if tags.find('broadcaster/') == -1:
-            is_streamer = False
-        else:
+        is_streamer = False
+        if tags.find('broadcaster/') != -1:
             is_streamer = True
 
         # vip tag isn't always there
@@ -341,6 +312,7 @@ def chat_interact(buffer):
                     chat(f"{username} -> pred start <name>, pred lock, pred outcome <1-10>, pred cancel")
         elif (not GRANT_MODS and is_mod) or (not GRANT_VIPS and is_vip):
             chat(f"{username} -> {ACTION_DENIED_MESSAGE}")
+            LOG.logger.warning(f"User {username} tried to perform an action and is not authorized\nMod: {is_mod}\nVIP: {is_vip}")
 
 
 def get_latest_prediction():

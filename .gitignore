@@ -1,7 +1,6 @@
 __pycache__
 .vscode
 config/config.toml
-config/bindings.json
 tokens/
 logs/
 test.py

@@ -28,6 +28,12 @@ grant_vips = false
 
 [hotkeys]
 enabled = true
+resolve_1 = "control + 1"
+resolve_2 = "control + 2"
+resolve_3 = "control + 3"
+resolve_4 = "control + 4"
+lock = "control + 5"
+cancel = "control + 6"
 
 [socket]
 host = '127.0.0.1' # localhost
