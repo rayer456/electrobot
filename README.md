@@ -1,18 +1,18 @@
 # electrobot
 
-Twitch bot that manages predictions via chat commands and starts predictions automatically based on Livesplit. Now with hotkey support.
+Twitch bot that manages predictions via chat commands and starts pre-made predictions automatically based on Livesplit. Now with hotkey support.
 
 # Prerequisites
 
 - [Python](https://www.python.org/downloads/) (Add to PATH)
 - [Livesplit](https://livesplit.org/downloads/) and [Livesplit Server](https://github.com/LiveSplit/LiveSplit.Server) (Optional)
 - A Twitch account (Affiliate) (with 2FA enabled)
-- A Twitch bot account
+- A Twitch bot account (Optional)
 
 # Installation
 
 1. Download the [latest release](https://github.com/electrorayer/electrobot/releases) and extract.
-2. Run the following command to install necessary dependencies:
+2. In the extracted folder, run the following command to install necessary dependencies:
 
     ```
     pip install -r requirements.txt
@@ -40,12 +40,28 @@ Once you see your application click on manage, then
 Open the `config` folder.
 
 1. Copy `config-example.toml` and rename the copy to `config.toml`.
-2. Open `config.toml` and change the value in `CLIENT_ID` to the client ID you noted down earlier.
-3. Do the same thing with `CLIENT_SECRET` and `REDIRECT_URI`.
-4. If you didn't use port 8777 you **MUST** also change the `PORT` field under `[socket]` as by default it is set to 8777.
-5. Under `[irc]` change the value of `CHANNEL` to your Twitch channel. **NOTE**: this must be in lowercase.
-6. Finally change the value of `BOT_ACCOUNT` to the Twitch channel of your bot.
+2. Open `config.toml` and change the value in `client_id` to the client ID you noted down earlier.
+3. Do the same thing with `client_secret` and `redirect_uri`.
+4. If you didn't use port 8777 you **MUST** also change the `port` field under `[socket]` as by default it is set to 8777.
+5. Under `[twitch.info]` change the value of `channel` to your Twitch channel.
+6. Finally change the value of `bot_account` to the Twitch channel of your bot. You can also use your streaming account for this.
 7. Save
+
+### Hotkeys
+
+Under `[hotkeys]` in `config.toml` you can bind actions to hotkeys and choose to enable/disable hotkeys to easily perform actions.
+
+Possible field names:
+- lock
+- cancel
+- resolve_<1-10> **by default only the first four outcomes are made into a hotkey.
+
+[List of available keys](https://github.com/btsdev/global_hotkeys#list-of-the-available-keys)
+
+### Additional configuration
+
+- Under `[messages]` you can edit the messages of the bot on different events.
+- Under `[permissions]` you can allow or disallow mods and VIPs to use commands.
 
 ## Managing predictions
 
@@ -67,15 +83,6 @@ The yellow stars indicate which category is active and which splits have predict
 
 *If you add splits often and you want to add a prediction for those splits you can rename any split in the `Splits` list to that split and make the prediction that way. The order or missing splits is irrelevant. The split list is more of a convenience feature. And if you want a prediction for every split well :(
 
-## Hotkeys
-
-When you first successfully run `electrobot.py` a bindings file will be created in `config/bindings.json` with some default hotkeys to perform below actions.
-
-- Close a prediction with CTRL + 5
-- Cancel a prediction with CTRL + 6
-- Select an outcome <1-10> with CTRL + <1-4> *by default only the first four outcomes are made into a hotkey. You can go all the way up to 10 by just copy pasting the objects in the bindings file.
-
-- You can change the actual keys you press by editing the `hotkey` field. [List of available keys](https://github.com/btsdev/global_hotkeys#list-of-the-available-keys)
 
 # Usage
 
@@ -103,7 +110,7 @@ Run `electrobot.py`
 
 If all was configured correctly you should see this:
 
-- <img src="assets/example.png" alt="predictions manager" title="predictions manager" width=519 height=270 >
+<img src="assets/example.png" alt="predictions manager" title="predictions manager" width=519 height=270>
 
 **Chat commands:**
 

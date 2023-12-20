@@ -76,7 +76,7 @@ class Token():
 
         match response.status_code:
             case 200:
-                LOG.logger.info(f"{self.token_type} TOKEN VALIDATED")
+                LOG.logger.info(f"{self.token_type.value.capitalize()} Token validated")
             case 401: # access token expired
                 LOG.logger.info(f"{self.token_type} Token expired, refreshing...")
 

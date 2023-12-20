@@ -19,7 +19,7 @@ from src import Token, TokenType
 from src import logger as LOG
 
 
-CHANNEL = f"#{CFG['twitch']['info']['channel']}"
+CHANNEL = f"#{CFG['twitch']['info']['channel'].lower()}"
 BOT_ACCOUNT = CFG['twitch']['info']['bot_account'] # can be anything?
 CLIENT_ID = CFG['twitch']['auth']['client_id']
 CHANNEL_ID = CFG['twitch']['info']['channel_id']

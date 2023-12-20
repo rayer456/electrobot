@@ -17,7 +17,7 @@ CLIENT_SECRET = CFG['twitch']['auth']['client_secret']
 REDIRECT_URI = CFG['twitch']['auth']['redirect_uri']
 BOT_SCOPE = CFG['twitch']['scopes']['bot_scope']
 BROAD_SCOPE = CFG['twitch']['scopes']['broad_scope']
-CHANNEL = CFG['twitch']['info']['channel']
+CHANNEL = CFG['twitch']['info']['channel'].lower()
 
 TOKEN_URL = 'https://id.twitch.tv/oauth2/token'
 AUTHORIZE_URL = 'https://id.twitch.tv/oauth2/authorize'

@@ -4,7 +4,7 @@ client_secret = 'YOUR_CLIENT_SECRET'
 redirect_uri = 'http://localhost:8777' # must match host/port in [socket] 
 
 [twitch.info]
-channel = 'YOUR_CHANNEL_NAME' # must be lowercase
+channel = 'YOUR_CHANNEL_NAME'
 bot_account = 'YOUR_BOT_NAME'
 channel_id = ''
 
