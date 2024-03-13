@@ -298,21 +298,38 @@ def chat_interact(buffer):
         chat_msg = i[i.find(f'{CHANNEL} :') + len(CHANNEL) + 2:]
         # print(f"{username}: {chat_msg}")
 
-        if (GRANT_MODS and is_mod) or (GRANT_VIPS and is_vip) or is_streamer:
-            match chat_msg.split():
-                case ["pred", "start", name]:
+        # disgusting but I don't give a shit
+        send_denied_message = False
+        match chat_msg.split():
+            case ["pred", "start", name]:
+                if (GRANT_MODS and is_mod) or (GRANT_VIPS and is_vip) or is_streamer:
                     create_prediction(name, username)
-                case ["pred", "lock"]:
+                elif (not GRANT_MODS and is_mod) or (not GRANT_VIPS and is_vip):
+                    send_denied_message = True
+
+            case ["pred", "lock"]:
+                if (GRANT_MODS and is_mod) or (GRANT_VIPS and is_vip) or is_streamer:
                     end_prediction("LOCK", username)
-                case ["pred", "outcome", outcome] if 0 < int(outcome) <= 10:
+                elif (not GRANT_MODS and is_mod) or (not GRANT_VIPS and is_vip):
+                    send_denied_message = True
+
+            case ["pred", "outcome", outcome] if 0 < int(outcome) <= 10:
+                if (GRANT_MODS and is_mod) or (GRANT_VIPS and is_vip) or is_streamer:
                     resolve_prediction(int(outcome), username)
-                case ["pred", "cancel"]:
+                elif (not GRANT_MODS and is_mod) or (not GRANT_VIPS and is_vip):
+                    send_denied_message = True
+            case ["pred", "cancel"]:
+                if (GRANT_MODS and is_mod) or (GRANT_VIPS and is_vip) or is_streamer:
                     end_prediction("CANCEL", username)
-                case ["!modcommands"]:
-                    chat(f"{username} -> pred start <name>, pred lock, pred outcome <1-10>, pred cancel")
-        elif (not GRANT_MODS and is_mod) or (not GRANT_VIPS and is_vip):
+                elif (not GRANT_MODS and is_mod) or (not GRANT_VIPS and is_vip):
+                    send_denied_message = True
+
+            case ["!modcommands"]:
+                chat(f"{username} -> pred start <name>, pred lock, pred outcome <1-10>, pred cancel")
+
+        if send_denied_message:
             chat(f"{username} -> {ACTION_DENIED_MESSAGE}")
-            LOG.logger.warning(f"User {username} tried to perform an action and is not authorized\nMod: {is_mod}\nVIP: {is_vip}")
+            LOG.logger.info(f"User {username} tried to perform an action and is not authorized\nMod: {is_mod}\nVIP: {is_vip}")
 
 
 def get_latest_prediction():
