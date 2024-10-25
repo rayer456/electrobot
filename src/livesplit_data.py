@@ -26,6 +26,9 @@ class LiveSplitData():
             category = f'{category} ({variables.removesuffix(", ")})'
 
         return category
+    
+    def get_game_name(self) -> str:
+        return self.xroot.find('GameName').text
 
     def get_split_names(self) -> list:
         return [segment.find('Name').text for segment in self.xroot.find('Segments')]

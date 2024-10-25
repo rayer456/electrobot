@@ -68,18 +68,20 @@ def IRC_connect():
 def IRC_reconnect():
     global delay, attempts
 
-    LOG.logger.warning("Disconnected, reconnecting...")
-    IRC.shutdown(2) #no more data sent/recv
-    IRC.close()
+    LOG.logger.warning("IRC disconnected, reconnecting...")
+    try:
+        IRC.shutdown(2) #no more data sent/recv
+        IRC.close()
+    except OSError:
+        LOG.logger.warning("IRC socket is closed...")
 
-    LOG.logger.warning(f"Waiting {delay}s...")
+    LOG.logger.info(f"Waiting {delay}s...")
     time.sleep(delay)
-    delay *= 2 #exp backoff
-    attempts += 1
     
-    if attempts == 7:
-        LOG.logger.critical("Couldn't connect to the IRC server, closing...")
-        input()
+    # keep waiting the same time after 5 attempts
+    if attempts < 5:
+        delay *= 2 # exp backoff
+        attempts += 1
 
     IRC_connect()
 
@@ -166,7 +168,13 @@ def main():
 
     while True: 
         try: 
-            select.select([IRC], [], [], 4)
+            while True:
+                try:
+                    select.select([IRC], [], [], 4)
+                    break
+                except ValueError:
+                    LOG.logger.error("Cannot read IRC socket...")
+                    IRC_reconnect()
             
             # data from livesplit or eventsub
             if q.qsize() != 0: 
@@ -225,8 +233,12 @@ def main():
         except KeyboardInterrupt:
             LOG.logger.info("Closing bot...")
             break
+        except socket.gaierror or ConnectionAbortedError:
+            LOG.logger.error("Lost socket connection...")
+            continue
         except Exception:
             LOG.logger.error("Exception in read_data", exc_info=True)
+            continue
     
 
 def hourly_validation():
@@ -296,7 +308,6 @@ def chat_interact(buffer):
 
         username = i[i.find(' :')+2:i.find('!')]
         chat_msg = i[i.find(f'{CHANNEL} :') + len(CHANNEL) + 2:]
-        # print(f"{username}: {chat_msg}")
 
         # disgusting but I don't give a shit
         send_denied_message = False
@@ -483,6 +494,7 @@ def end_prediction(action, username):
 async def event_handler(q: mp.Queue, token_broad: Token):
     current_eventsub = TWITCH_EVENTSUB
     while True:
+        time.sleep(2)
         try:
             async with websockets.connect((current_eventsub)) as websock:
                 while True:
@@ -516,15 +528,15 @@ async def event_handler(q: mp.Queue, token_broad: Token):
                             LOG.logger.error(f"Unknown message: {buffer['metadata']['message_type']}")
                             input()
         except TimeoutError: # no keepalive
-            LOG.logger.warning("Connection lost, reconnecting...", exc_info=True)
+            LOG.logger.warning("Eventsub: Connection lost, reconnecting...")
             current_eventsub = TWITCH_EVENTSUB
             continue
         except websockets.exceptions.ConnectionClosedError:
-            LOG.logger.error("Eventsub: Connection closed", exc_info=True)
+            LOG.logger.error("Eventsub: Connection closed")
             current_eventsub = TWITCH_EVENTSUB
             continue
         except Exception:
-            LOG.logger.error("Websockets error", exc_info=True)
+            LOG.logger.error("Eventsub: Trying to establish a connection...")
             continue
 
 
@@ -619,7 +631,8 @@ if __name__ == "__main__":
         token_broad: Token = manager.Token(TokenType.BROADCASTER)
         token_bot: Token = manager.Token(TokenType.BOT)
     except Exception:
-        input()
+        LOG.logger.critical("Exception when creating or validating tokens: Couldn't establish an internet connection.")
+        exit(1)
 
     IRC_connect()
 

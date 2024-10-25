@@ -101,7 +101,7 @@ QLineEdit {
      <number>6</number>
     </property>
     <item row="0" column="2">
-     <layout class="QHBoxLayout" name="mainLayout" stretch="0,0,0">
+     <layout class="QHBoxLayout" name="mainLayout" stretch="0,0,0,0">
       <property name="spacing">
        <number>15</number>
       </property>
@@ -141,7 +141,7 @@ QLineEdit {
            </font>
           </property>
           <property name="layoutDirection">
-           <enum>Qt::LeftToRight</enum>
+           <enum>Qt::LayoutDirection::LeftToRight</enum>
           </property>
           <property name="autoFillBackground">
            <bool>false</bool>
@@ -150,7 +150,7 @@ QLineEdit {
            <string>Categories</string>
           </property>
           <property name="alignment">
-           <set>Qt::AlignCenter</set>
+           <set>Qt::AlignmentFlag::AlignCenter</set>
           </property>
           <property name="wordWrap">
            <bool>true</bool>
@@ -194,7 +194,7 @@ QLineEdit {
            <bool>false</bool>
           </property>
           <property name="layoutDirection">
-           <enum>Qt::LeftToRight</enum>
+           <enum>Qt::LayoutDirection::LeftToRight</enum>
           </property>
           <property name="styleSheet">
            <string notr="true">QListWidget {
@@ -219,22 +219,22 @@ QListWidget:item:hover {
 </string>
           </property>
           <property name="sizeAdjustPolicy">
-           <enum>QAbstractScrollArea::AdjustToContents</enum>
+           <enum>QAbstractScrollArea::SizeAdjustPolicy::AdjustToContents</enum>
           </property>
           <property name="editTriggers">
-           <set>QAbstractItemView::DoubleClicked|QAbstractItemView::EditKeyPressed|QAbstractItemView::SelectedClicked</set>
+           <set>QAbstractItemView::EditTrigger::DoubleClicked|QAbstractItemView::EditTrigger::EditKeyPressed|QAbstractItemView::EditTrigger::SelectedClicked</set>
           </property>
           <property name="alternatingRowColors">
            <bool>false</bool>
           </property>
           <property name="selectionMode">
-           <enum>QAbstractItemView::SingleSelection</enum>
+           <enum>QAbstractItemView::SelectionMode::SingleSelection</enum>
           </property>
           <property name="selectionBehavior">
-           <enum>QAbstractItemView::SelectItems</enum>
+           <enum>QAbstractItemView::SelectionBehavior::SelectItems</enum>
           </property>
           <property name="viewMode">
-           <enum>QListView::ListMode</enum>
+           <enum>QListView::ViewMode::ListMode</enum>
           </property>
           <property name="selectionRectVisible">
            <bool>false</bool>
@@ -297,6 +297,50 @@ QListWidget:item:hover {
        </layout>
       </item>
       <item>
+       <widget class="QTreeWidget" name="treeWidget">
+        <column>
+         <property name="text">
+          <string>1</string>
+         </property>
+        </column>
+        <column>
+         <property name="text">
+          <string>2</string>
+         </property>
+        </column>
+        <item>
+         <property name="text">
+          <string>gta5</string>
+         </property>
+         <item>
+          <property name="text">
+           <string>any%</string>
+          </property>
+         </item>
+         <item>
+          <property name="text">
+           <string>100%</string>
+          </property>
+         </item>
+         <item>
+          <property name="text">
+           <string>trevis</string>
+          </property>
+         </item>
+        </item>
+        <item>
+         <property name="text">
+          <string>gta6</string>
+         </property>
+         <item>
+          <property name="text">
+           <string>any%</string>
+          </property>
+         </item>
+        </item>
+       </widget>
+      </item>
+      <item>
        <layout class="QVBoxLayout" name="splitLayout">
         <property name="spacing">
          <number>0</number>
@@ -323,7 +367,7 @@ QListWidget:item:hover {
            <string>Splits</string>
           </property>
           <property name="alignment">
-           <set>Qt::AlignCenter</set>
+           <set>Qt::AlignmentFlag::AlignCenter</set>
           </property>
           <property name="wordWrap">
            <bool>true</bool>
@@ -385,23 +429,38 @@ QListWidget::item:hover {
 }</string>
           </property>
           <property name="sizeAdjustPolicy">
-           <enum>QAbstractScrollArea::AdjustIgnored</enum>
+           <enum>QAbstractScrollArea::SizeAdjustPolicy::AdjustIgnored</enum>
           </property>
           <property name="editTriggers">
-           <set>QAbstractItemView::DoubleClicked|QAbstractItemView::EditKeyPressed|QAbstractItemView::SelectedClicked</set>
+           <set>QAbstractItemView::EditTrigger::DoubleClicked|QAbstractItemView::EditTrigger::EditKeyPressed|QAbstractItemView::EditTrigger::SelectedClicked</set>
           </property>
           <property name="alternatingRowColors">
            <bool>false</bool>
           </property>
           <property name="selectionMode">
-           <enum>QAbstractItemView::SingleSelection</enum>
+           <enum>QAbstractItemView::SelectionMode::SingleSelection</enum>
           </property>
           <property name="selectionBehavior">
-           <enum>QAbstractItemView::SelectRows</enum>
+           <enum>QAbstractItemView::SelectionBehavior::SelectRows</enum>
           </property>
           <property name="selectionRectVisible">
            <bool>false</bool>
           </property>
+          <item>
+           <property name="text">
+            <string>fqds</string>
+           </property>
+          </item>
+          <item>
+           <property name="text">
+            <string>fqds</string>
+           </property>
+          </item>
+          <item>
+           <property name="text">
+            <string>fqds</string>
+           </property>
+          </item>
          </widget>
         </item>
        </layout>
@@ -599,10 +658,10 @@ QListWidget::item:hover {
             <item>
              <spacer name="verticalSpacer_2">
               <property name="orientation">
-               <enum>Qt::Vertical</enum>
+               <enum>Qt::Orientation::Vertical</enum>
               </property>
               <property name="sizeType">
-               <enum>QSizePolicy::Maximum</enum>
+               <enum>QSizePolicy::Policy::Maximum</enum>
               </property>
               <property name="sizeHint" stdset="0">
                <size>
@@ -1031,7 +1090,7 @@ QListWidget::item:hover {
                <cursorShape>IBeamCursor</cursorShape>
               </property>
               <property name="focusPolicy">
-               <enum>Qt::StrongFocus</enum>
+               <enum>Qt::FocusPolicy::StrongFocus</enum>
               </property>
               <property name="toolTip">
                <string/>
@@ -1047,10 +1106,10 @@ QListWidget::item:hover {
             <item>
              <spacer name="verticalSpacer">
               <property name="orientation">
-               <enum>Qt::Vertical</enum>
+               <enum>Qt::Orientation::Vertical</enum>
               </property>
               <property name="sizeType">
-               <enum>QSizePolicy::Maximum</enum>
+               <enum>QSizePolicy::Policy::Maximum</enum>
               </property>
               <property name="sizeHint" stdset="0">
                <size>
@@ -1325,7 +1384,7 @@ QListWidget::item:hover {
            <number>40</number>
           </property>
           <property name="sizeConstraint">
-           <enum>QLayout::SetDefaultConstraint</enum>
+           <enum>QLayout::SizeConstraint::SetDefaultConstraint</enum>
           </property>
           <property name="rightMargin">
            <number>120</number>

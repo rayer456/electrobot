@@ -6,20 +6,20 @@ import json
 
 class Launcher():
     def __init__(self):
-        self.get_auto_predictions()
+        self.default_predictions = self.get_auto_predictions()
 
-    def get_auto_predictions(self):
+    def get_auto_predictions(self) -> list[dict]:
         with open('predictions/predictions.json', 'r') as file:
             data = json.load(file)
 
         # auto start based on current split
-        self.auto_predictions = [
+        return [
             {
             "name": p['name'],
-            "split_name": p['auto_predict']['split_name']
+            "split_name": p['split_name']
             }
             for p in data['predictions']
-            if p['auto_predict']['auto_start']
+            if p['auto_start']
         ]
 
 
@@ -30,6 +30,7 @@ class Launcher():
                 sock.settimeout(0.5)
                 LOG.logger.info("Connected to Livesplit Server")
 
+                self.auto_predictions = self.default_predictions
                 while True:
                     try:
                         sleep(1.5)
@@ -48,8 +49,9 @@ class Launcher():
                                 LOG.logger.info(f"Auto started at {split_name}")
                                 
                         #do things based on name and/or time
-                    except TimeoutError: #inactive timer
-                        self.get_auto_predictions()
+                    except TimeoutError: 
+                        # inactive timer
+                        self.auto_predictions = self.default_predictions
                         continue
         except ConnectionRefusedError:
             LOG.logger.warning("Predictions will not start automatically by split, start Livesplit Server and restart the bot")

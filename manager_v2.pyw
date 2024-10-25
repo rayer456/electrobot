@@ -4,10 +4,16 @@ import json
 
 from PyQt6.QtWidgets import QApplication, QMainWindow, QFileDialog, QMessageBox, QListWidgetItem
 from PyQt6.QtGui import QIcon
+from PyQt6.QtCore import Qt
 
 from src import Ui_MainWindow
 from src import LiveSplitData
+from src import Prediction
+from src import Category
 
+
+ALL_DATA_PATH = "predictions/all_data.json"
+PREDICTIONS_PATH = "predictions/predictions.json"
 
 class Window(QMainWindow, Ui_MainWindow):
     def __init__(self, parent=None):
@@ -17,13 +23,15 @@ class Window(QMainWindow, Ui_MainWindow):
         self.connectFunctions()
 
         self.checkAndLoadData()
-        self.listOutcomes()
+        self.putOutcomesInList()
         self.refreshCatList()
         self.setActiveCategory()
 
         
     def connectFunctions(self):
         self.actionOpen.triggered.connect(self.selectFile)
+        
+        # will pass index parameter when triggered like this
         self.categoryList.itemClicked.connect(lambda: self.refreshSplitList())
         self.splitList.itemSelectionChanged.connect(self.loadPredictionForm)
         self.setActiveButton.clicked.connect(lambda: self.setActiveCategory(setActive=True))
@@ -53,20 +61,58 @@ class Window(QMainWindow, Ui_MainWindow):
         if not os.path.exists('predictions'):
             os.makedirs('predictions')
 
-        while True:
-            try:
-                with open('predictions/all_data.json', 'r') as file:
-                    self.all_data: dict = json.load(file)
-                    break
-            except FileNotFoundError:
-                default = {
-                    'cats': []
-                }
-                with open('predictions/all_data.json', 'w') as file:
-                    file.write(json.dumps(default))
+        if not os.path.exists(ALL_DATA_PATH):
+            default = {
+                'cats': []
+            }
+            with open(ALL_DATA_PATH, 'w') as file:
+                file.write(json.dumps(default))
 
+        try:
+            with open(ALL_DATA_PATH, 'r') as file:
+                all_cats_serialized: list[dict] = json.load(file).copy()["cats"]
+        except Exception:
+            dialog = QMessageBox(self)
+            dialog.setWindowTitle("Alert")
+            dialog.setText(f"Couldn't load {ALL_DATA_PATH}\n\nClosing...")
+            button = dialog.exec()
 
-    def listOutcomes(self):
+            if button == QMessageBox.StandardButton.Ok:
+                exit(1)
+            
+        self.deserialized_cats: list[Category] = []
+        for cat_ser in all_cats_serialized:
+            split_predictions: list[Prediction] = []
+            for pred in cat_ser["split_names"]:
+                pred: dict
+
+                is_empty=False
+                if not pred["prediction"]:
+                    is_empty = True
+
+                # form prediction based on data in file
+                # even if it's empty
+                prediction = Prediction(
+                    split_name=pred["split_name"],
+                    auto_start=pred.get('prediction', {}).get('auto_start', False),
+                    pred_split_name=pred.get("prediction", {}).get("split_name", ""),
+                    pred_name=pred.get("prediction", {}).get("name", ""),
+                    data_to_send=pred.get("prediction", {}).get("data", {}),
+                    is_empty=is_empty,
+                )
+                split_predictions.append(prediction)
+
+            # split predictions are templates containing an empty prediction and a split name
+            category = Category(
+                active=cat_ser["active"],
+                category=cat_ser["category"],
+                game_name=cat_ser["game_name"],
+                split_predictions=split_predictions,
+            )
+            self.deserialized_cats.append(category)
+        
+
+    def putOutcomesInList(self):
         self.outcomes = [self.field_outcome1]
         self.outcomes.append(self.field_outcome2)
         self.outcomes.append(self.field_outcome3)
@@ -82,15 +128,16 @@ class Window(QMainWindow, Ui_MainWindow):
     def refreshCatList(self, setIndexTo=0, activeClicked=False):
         self.categoryList.clear()
 
-        for cat in self.all_data['cats']:
-            catRow = QListWidgetItem(cat['category'])
-            if cat['active']:
-                catRow.setIcon(QIcon('assets/star.png'))
+        for cat in self.deserialized_cats:
+            cat_row = QListWidgetItem(cat.category)
+            cat_row.setData(Qt.ItemDataRole.UserRole, cat.game_name)
+            if cat.active:
+                cat_row.setIcon(QIcon('assets/star.png'))
 
-            self.categoryList.addItem(catRow)
+            self.categoryList.addItem(cat_row)
 
         self.categoryList.setCurrentRow(setIndexTo)
-        if len(self.all_data['cats']) > 0:
+        if len(self.deserialized_cats) > 0:
             if activeClicked:
                 self.refreshSplitList(self.splitList.currentRow())
             else:
@@ -102,16 +149,20 @@ class Window(QMainWindow, Ui_MainWindow):
 
     
     def refreshSplitList(self, setIndexTo=0):
+        # self.splitList.blockSignals(True)
         self.splitList.clear()
+        # self.splitList.blockSignals(False) #itemSelectionChanged signal triggers here
         selected_cat = self.categoryList.currentItem().text()
+        selected_cat_game_name = self.categoryList.currentItem().data(Qt.ItemDataRole.UserRole)
 
-        for cat in self.all_data['cats']:
-            if cat['category'] == selected_cat:
-                for split in cat['split_names']:
-                    splitRow = QListWidgetItem(split['split_name'])
-                    if split['prediction']:
+        for cat in self.deserialized_cats:
+            if cat.category == selected_cat and cat.game_name == selected_cat_game_name:
+                for split in cat.split_predictions:
+                    split: Prediction
+                    splitRow = QListWidgetItem(split.split_name)
+                    if not split.is_empty:
                         splitRow.setIcon(QIcon('assets/star.png'))
-                    
+
                     self.splitList.addItem(splitRow)
                 break
 
@@ -123,6 +174,7 @@ class Window(QMainWindow, Ui_MainWindow):
             if hasattr(self, 'activeCategory') and setActive:
                 try:
                     self.activeCategory = self.categoryList.currentItem().text()
+                    selected_cat_game_name = self.categoryList.currentItem().data(Qt.ItemDataRole.UserRole)
                 except AttributeError:
                     msg = QMessageBox()
                     msg.setIcon(QMessageBox.Icon.Warning)
@@ -131,16 +183,17 @@ class Window(QMainWindow, Ui_MainWindow):
                     msg.exec()
                     return
                 
-                for cat in self.all_data['cats']:
-                    if cat['category'] == self.activeCategory:
-                        cat['active'] = True
+                for cat in self.deserialized_cats:
+                    if cat.game_name == selected_cat_game_name:
+                        cat.active = cat.category == self.activeCategory
                     else:
-                        cat['active'] = False
+                        cat.active = False
+
             # initial
             else:
-                for cat in self.all_data['cats']:
-                    if cat['active']:
-                        self.activeCategory = cat['category']
+                for cat in self.deserialized_cats:
+                    if cat.active:
+                        self.activeCategory = cat.category
                         break
                 # no active cat
                 else:
@@ -168,45 +221,35 @@ class Window(QMainWindow, Ui_MainWindow):
 
 
     def add_cats_to_datafile(self, paths: list):
-        namesToAdd, catsToAdd = [], []
+        cats_to_add = []
 
         for path in paths:
             lsd = LiveSplitData(path)
             subcategory = lsd.get_subcategory()
+            game_name = lsd.get_game_name()
 
-            for name in namesToAdd:
-                if name == subcategory:
+            for cat in self.deserialized_cats:
+                if cat.category == subcategory and cat.game_name == game_name:
                     msg = QMessageBox()
                     msg.setIcon(QMessageBox.Icon.Warning)
-                    msg.setText(f"Can't add {subcategory} more than once")
-                    msg.setWindowTitle("Warning")
-                    msg.exec()
-                    return
-            for cat in self.all_data['cats']:
-                if cat['category'] == subcategory:
-                    msg = QMessageBox()
-                    msg.setIcon(QMessageBox.Icon.Warning)
-                    msg.setText(f"{subcategory} is already in the list")
+                    msg.setText(f"{subcategory} from {game_name} is already in the list")
                     msg.setWindowTitle("Warning")
                     msg.exec()
                     return
             
             # list of objects each containing split name and empty prediction
-            splits_with_preds = [{
-                'split_name': split_name,
-                'prediction': {},
-            } for split_name in lsd.get_split_names()]
+            split_preds = [Prediction.empty(split_name) for split_name in lsd.get_split_names()]
 
-            new_cat = {
-                'category': subcategory,
-                'active': False, # only active if user sets it
-                'split_names': splits_with_preds
-            }
+            new_cat = Category(
+                active=False, # only active if user sets it
+                game_name=game_name,
+                category=subcategory,
+                split_predictions=split_preds
+            )
 
-            namesToAdd.append(subcategory)
-            catsToAdd.append(new_cat)
+            cats_to_add.append(new_cat)
         
-        self.all_data['cats'].extend(catsToAdd)
+        self.deserialized_cats.extend(cats_to_add)
         self.save_all_data()
         self.refreshCatList()
 
@@ -214,15 +257,18 @@ class Window(QMainWindow, Ui_MainWindow):
     def loadPredictionForm(self):
         selected_cat = self.categoryList.currentItem().text()
         selected_split = self.splitList.currentItem().text()
+        selected_cat_game_name = self.categoryList.currentItem().data(Qt.ItemDataRole.UserRole)
 
         #TODO create separate function to find cat and split?
-        for cat in self.all_data['cats']:
-            if cat['category'] == selected_cat:
-                for split in cat['split_names']:
-                    if split['split_name'] == selected_split:
+        for cat in self.deserialized_cats:
+            if cat.category == selected_cat and cat.game_name == selected_cat_game_name:
+                for split in cat.split_predictions:
+                    split: Prediction
+                    if split.split_name == selected_split:
                         self.resetFields()
-                        if split['prediction']: # if prediction present
-                            self.populateFields(split['prediction'], selected_split)
+                        # only populate fields of filled in predictions
+                        if not split.is_empty:
+                            self.populateFields(split, selected_split)
 
                         self.savedStatus.setText('Status: Saved')
                         self.savedStatus.setStyleSheet("QLabel {\n"
@@ -232,17 +278,17 @@ class Window(QMainWindow, Ui_MainWindow):
                 break
 
     
-    def populateFields(self, p, split_name):
-        self.field_name.setText(p['name'])
-        self.field_autoStart.setChecked(p['auto_predict']['auto_start'])
+    def populateFields(self, p: Prediction, split_name):
+        self.field_name.setText(p.pred_name)
+        self.field_autoStart.setChecked(p.auto_start)
         self.field_splitName.setText(split_name)
-        self.field_title.setText(p['data']['title'])
+        self.field_title.setText(p.data_to_send['title'])
         
-        pred_outcomes = p['data']['outcomes']
+        pred_outcomes: list[dict] = p.data_to_send['outcomes']
         for i, pred_outcome in enumerate(pred_outcomes):
             self.outcomes[i].setText(pred_outcome['title'])
 
-        self.field_window.setText(str(p['data']['prediction_window']))
+        self.field_window.setText(str(p.data_to_send['prediction_window']))
 
 
     def resetFields(self):
@@ -284,39 +330,42 @@ class Window(QMainWindow, Ui_MainWindow):
         formIsValid = self.validateForm(old_selected_split)
 
         if formIsValid:
-            all_cats: list = self.all_data['cats']
             selected_cat = self.categoryList.currentItem().text()
             selected_split = self.splitList.currentItem().text()
+            selected_cat_game_name = self.categoryList.currentItem().data(Qt.ItemDataRole.UserRole)
             
-            for cat in all_cats:
-                if cat['category'] == selected_cat:
-                    for split in cat['split_names']:
-                        if split['split_name'] == old_selected_split:
+            for cat in self.deserialized_cats:
+                if cat.category == selected_cat and cat.game_name == selected_cat_game_name:
+                    for i, split in enumerate(cat.split_predictions):
+                        split: Prediction
+                        if split.split_name == old_selected_split:
                             # replace split name
-                            split['split_name'] = selected_split
-                            new_prediction = {
-                                'auto_predict': {
-                                    'auto_start': self.field_autoStart.isChecked(),
-                                    'split_name': self.field_splitName.text()
-                                },
-                                'data': {
-                                    'broadcaster_id': '',
-                                    'outcomes': [],
-                                    'prediction_window': int(self.field_window.text()),
-                                    'title': self.field_title.text(),
-                                },
-                                'name': self.field_name.text(),
+                            split.split_name = selected_split
+                            new_prediction = Prediction(
+                                split_name=self.field_splitName.text(),
+                                auto_start=self.field_autoStart.isChecked(),
+                                pred_split_name=self.field_splitName.text(),
+                                pred_name=self.field_name.text(),
+                                data_to_send={},
+                                is_empty=False,
+                            )
+                            data_to_add = {
+                                'broadcaster_id': '',
+                                'outcomes': [],
+                                'prediction_window': int(self.field_window.text()),
+                                'title': self.field_title.text(),
                             }
 
                             for outcome in self.outcomes:
+                                #TODO if outcome.text() ?
                                 if outcome.text() != '':
-                                    new_prediction['data']['outcomes'].append(
+                                    data_to_add['outcomes'].append(
                                         {
                                             'title': outcome.text()
                                         }
                                     )
-
-                            split['prediction'] = new_prediction
+                            new_prediction.data_to_send = data_to_add
+                            cat.split_predictions[i] = new_prediction
                             break
                     break
             
@@ -325,17 +374,20 @@ class Window(QMainWindow, Ui_MainWindow):
             if self.activeCategory == selected_cat:
                 self.saveToPredFile()
 
+            
             self.savedStatus.setText('Status: Saved')
             self.savedStatus.setStyleSheet("QLabel {\n"
             "    color: darkgreen;\n"
             "}")
 
 
+
     def deletePrediction(self):
         try:
             selected_cat = self.categoryList.currentItem().text()
             selected_split = self.splitList.currentItem().text()
-        except AttributeError:
+            selected_cat_game_name = self.categoryList.currentItem().data(Qt.ItemDataRole.UserRole)
+        except Exception:
             msg = QMessageBox()
             msg.setIcon(QMessageBox.Icon.Warning)
             msg.setText("No split selected")
@@ -343,11 +395,14 @@ class Window(QMainWindow, Ui_MainWindow):
             msg.exec()
             return
 
-        for cat in self.all_data['cats']:
-            if cat['category'] == selected_cat:
-                for split in cat['split_names']:
-                    if split['split_name'] == selected_split:
-                        split['prediction'] = {}
+        # iterate over categories until selected category
+        # iterate over splits until selected split
+        for cat in self.deserialized_cats:
+            if cat.category == selected_cat and cat.game_name == selected_cat_game_name:
+                for split in cat.split_predictions:
+                    split: Prediction
+                    if split.split_name == selected_split:
+                        split.reset()
                         break
                 break
 
@@ -364,24 +419,27 @@ class Window(QMainWindow, Ui_MainWindow):
 
 
     def save_all_data(self):
-        with open('predictions/all_data.json', 'w') as file:
-            file.write(json.dumps(self.all_data))
+        all_data = {
+            "cats": [cat.as_json() for cat in self.deserialized_cats]
+        }
+        with open(ALL_DATA_PATH, 'w') as file:
+            file.write(json.dumps(all_data))
 
 
     def saveToPredFile(self):
         predictions = {
             'predictions': []
         }
-
-        # get all preds of the active category
-        for cat in self.all_data['cats']:
-            if cat['active']:
-                for split in cat['split_names']:
-                    if split['prediction']:
-                        predictions['predictions'].append(split['prediction'])
+        # get all defined preds of the active category
+        for cat in self.deserialized_cats:
+            if cat.active:
+                for split in cat.split_predictions:
+                    split: Prediction
+                    if not split.is_empty:
+                        predictions['predictions'].append(split.pred_as_json())
                 break
                
-        with open('predictions/predictions.json', 'w') as file:
+        with open(PREDICTIONS_PATH, 'w') as file:
             file.write(json.dumps(predictions))
 
     
@@ -423,10 +481,11 @@ class Window(QMainWindow, Ui_MainWindow):
 
             if choice == QMessageBox.StandardButton.Yes:
                 # duplicate split name
-                for cat in self.all_data['cats']:
-                    if cat['category'] == self.categoryList.currentItem().text():
-                        for split in cat['split_names']:
-                            if split['split_name'] == splitName:
+                for cat in self.deserialized_cats:
+                    if cat.category == self.categoryList.currentItem().text():
+                        for split in cat.split_predictions:
+                            split: Prediction
+                            if split.split_name == splitName:
                                 msg = QMessageBox()
                                 msg.setIcon(QMessageBox.Icon.Warning)
                                 msg.setText("Can't have duplicate split names")
@@ -480,6 +539,7 @@ class Window(QMainWindow, Ui_MainWindow):
         selected = self.categoryList.currentRow()
         try:
             selected_cat = self.categoryList.currentItem().text()
+            selected_cat_game_name = self.categoryList.currentItem().data(Qt.ItemDataRole.UserRole)
         except AttributeError:
             msg = QMessageBox()
             msg.setIcon(QMessageBox.Icon.Warning)
@@ -489,18 +549,17 @@ class Window(QMainWindow, Ui_MainWindow):
             return
     
         self.categoryList.takeItem(selected)
-        activeCat = False
-        for i, cat in enumerate(self.all_data['cats']):
-            if cat['category'] == selected_cat:
-                if cat['active']:
-                    activeCat = True
-                self.all_data['cats'].pop(i)
+        active_cat = False
+        for i, cat in enumerate(self.deserialized_cats):
+            if cat.category == selected_cat and cat.game_name == selected_cat_game_name:
+                active_cat = cat.active
+                self.deserialized_cats.pop(i)
                 break
 
         self.refreshCatList()
         self.setActiveCategory()
         self.save_all_data()
-        if activeCat:
+        if active_cat:
             self.saveToPredFile()
 
 
